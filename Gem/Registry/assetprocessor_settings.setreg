@@ -1,0 +1,18 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "ScanFolder DroneSim/Assets": {
+                    "watch": "@GEMROOT:DroneSim@/Assets",
+                    "recursive": 1,
+                    "order": 101
+                },
+                "ScanFolder DroneSim/Registry": {
+                    "watch": "@GEMROOT:DroneSim@/Registry",
+                    "recursive": 1,
+                    "order": 102
+                }
+            }
+        }
+    }
+}

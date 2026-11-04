@@ -1,0 +1,55 @@
+{
+    "project_name": "DroneSim",
+    "version": "1.0.0",
+    "project_id": "{C62A30EE-EB98-4CEE-BAE1-C49E7EB505CE}",
+    "origin": "Open 3D Engine Extras: DroneSim",
+    "license": "",
+    "display_name": "DroneSim",
+    "summary": "Multirotor drone simulation with ROS 2 interface.",
+    "canonical_tags": [
+        "Project"
+    ],
+    "user_tags": [
+        "DroneSim",
+        "ROS2",
+        "ROS"
+    ],
+    "icon_path": "preview.png",
+    "engine": "o3de-sdk",
+    "external_subdirectories": [
+        "Gem",
+        "Gems/Multirotor"
+    ],
+    "restricted": "DroneSim",
+    "gem_names": [
+        "Atom",
+        "AudioSystem",
+        "CameraFramework",
+        "Compression",
+        "DebugDraw",
+        "DiffuseProbeGrid",
+        "EditorPythonBindings",
+        "EMotionFX",
+        "GameState",
+        "ImGui",
+        "LandscapeCanvas",
+        "LyShine",
+        "PhysX5",
+        "PrimitiveAssets",
+        "PrefabBuilder",
+        "ROS2>=3.1.0",
+        "ROS2Controllers",
+        "ROS2SampleRobots",
+        "ROS2Sensors",
+        "SaveData",
+        "ScriptCanvasPhysics",
+        "ScriptEvents",
+        "StartingPointInput",
+        "TextureAtlas",
+        "WhiteBox",
+        "WarehouseAssets",
+        "Multirotor",
+        "DroneSim"
+    ],
+    "engine_version": "2.6.0"
+}

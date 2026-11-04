@@ -1,0 +1,30 @@
+{
+    "gem_name": "Multirotor",
+    "version": "1.0.0",
+    "display_name": "Multirotor",
+    "license": "",
+    "license_url": "",
+    "origin": "klaxalk",
+    "origin_url": "",
+    "type": "Code",
+    "summary": "Multirotor dynamics, onboard attitude controller, and ROS 2 command interface for PhysX rigid bodies.",
+    "canonical_tags": [
+        "Gem"
+    ],
+    "user_tags": [
+        "Multirotor"
+    ],
+    "platforms": [
+        ""
+    ],
+    "icon_path": "preview.png",
+    "requirements": "ROS 2 with mrs_msgs installed and sourced.",
+    "documentation_url": "",
+    "dependencies": [
+        "PhysX5",
+        "ROS2>=4.0.0"
+    ],
+    "repo_uri": "",
+    "compatible_engines": [],
+    "engine_api_dependencies": []
+}

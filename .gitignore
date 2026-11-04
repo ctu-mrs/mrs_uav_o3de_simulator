@@ -2,9 +2,13 @@
 [Bb]uild/
 [Cc]ache/
 [Uu]ser/
+[Uu]ser_test*/
 _savebackup/
 *.swatches
-/imgui.ini
+imgui.ini
+backtrace.log
+CMakeUserPresets.json
+**/__pycache__
 
 # Editor and IDE files
 .vs/
@@ -14,3 +18,4 @@ _savebackup/
 *~
 compile_commands.json
 .cache/
+*.bak[0-9]*

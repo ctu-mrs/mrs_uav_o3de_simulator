@@ -1,0 +1,18 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "ScanFolder Multirotor/Assets": {
+                    "watch": "@GEMROOT:Multirotor@/Assets",
+                    "recursive": 1,
+                    "order": 101
+                },
+                "ScanFolder Multirotor/Registry": {
+                    "watch": "@GEMROOT:Multirotor@/Registry",
+                    "recursive": 1,
+                    "order": 102
+                }
+            }
+        }
+    }
+}

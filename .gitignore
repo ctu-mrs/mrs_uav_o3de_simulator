@@ -1,0 +1,16 @@
+# O3DE build output and generated assets
+[Bb]uild/
+[Cc]ache/
+[Uu]ser/
+_savebackup/
+*.swatches
+/imgui.ini
+
+# Editor and IDE files
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+compile_commands.json
+.cache/

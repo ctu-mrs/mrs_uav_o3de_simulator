@@ -16,8 +16,7 @@
                 "Id": 6161994726711464193,
                 "Child Entity Order": [
                     "Entity_[933407460906]",
-                    "Entity_[109299002150]",
-                    "Entity_[589803524961]"
+                    "Entity_[109299002150]"
                 ]
             },
             "EditorInspectorComponent": {
@@ -393,49 +392,6 @@
                             0.05700000002980232
                         ]
                     }
-                }
-            }
-        },
-        "Entity_[589803524961]": {
-            "Id": "Entity_[589803524961]",
-            "Name": "Entity1",
-            "Components": {
-                "EditorDisabledCompositionComponent": {
-                    "$type": "EditorDisabledCompositionComponent",
-                    "Id": 3711303572452592617
-                },
-                "EditorEntityIconComponent": {
-                    "$type": "EditorEntityIconComponent",
-                    "Id": 9230267229234510213
-                },
-                "EditorEntitySortComponent": {
-                    "$type": "EditorEntitySortComponent",
-                    "Id": 16962389092005618006
-                },
-                "EditorInspectorComponent": {
-                    "$type": "EditorInspectorComponent",
-                    "Id": 3790341827647887592
-                },
-                "EditorLockComponent": {
-                    "$type": "EditorLockComponent",
-                    "Id": 114106449339442403
-                },
-                "EditorOnlyEntityComponent": {
-                    "$type": "EditorOnlyEntityComponent",
-                    "Id": 3893861808195974412
-                },
-                "EditorPendingCompositionComponent": {
-                    "$type": "EditorPendingCompositionComponent",
-                    "Id": 16296419939163013175
-                },
-                "EditorVisibilityComponent": {
-                    "$type": "EditorVisibilityComponent",
-                    "Id": 3367319418629616469
-                },
-                "TransformComponent": {
-                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
-                    "Id": 14641504904374829639,
-                    "Parent Entity": "ContainerEntity"
                 }
             }
         },

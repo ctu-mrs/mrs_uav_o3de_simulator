@@ -57,6 +57,7 @@ Topics are under the drone's namespace, `/uav1`.
 | `imu` | `sensor_msgs/Imu` | 250 Hz |
 | `camera_image_color`, `color_camera_info` | `sensor_msgs/Image`, `CameraInfo` | 1280x720, 30 Hz |
 | `rangefinder` | `sensor_msgs/Range` | Ray cast down, 100 Hz, 40 m, 41 m when nothing is in range |
+| `on_ground` | `std_msgs/Bool` | From the contacts of the rigid body, 100 Hz, not published until the drone is released at startup |
 | `lidar_points` | `sensor_msgs/PointCloud2` | 28800 points, 10 Hz, NaN where a ray hits nothing |
 
 Rates are in sim time, on `/clock`. Commands must keep streaming: the throttle is cut 0.5 s after the last one. The drone hovers at a throttle of about 0.5. The body frame is `uav1/fcu`, front-left-up, and `uav1/camera`, `uav1/lidar`, and `uav1/garmin` publish static transforms to it.

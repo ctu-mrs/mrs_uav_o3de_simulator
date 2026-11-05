@@ -5,19 +5,28 @@
 
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
+#include <AzCore/std/containers/set.h>
 #include <AzCore/std/parallel/mutex.h>
+#include <AzFramework/Physics/Common/PhysicsSimulatedBodyEvents.h>
 #include <AzFramework/Physics/Common/PhysicsEvents.h>
 #include <AzFramework/Physics/Common/PhysicsTypes.h>
 #include <Multirotor/MultirotorTypeIds.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
+
+namespace Physics
+{
+    class Shape;
+}
 
 namespace Multirotor
 {
     //! Simulates a multirotor on the entity's dynamic rigid body.
     //! Receives attitude or attitude-rate + collective throttle commands over ROS 2 (see MultirotorConfiguration)
     //! and runs the onboard controller and motor model on every physics sub-step, applying rotor forces to the body.
+    //! Publishes whether the UAV stands on something, from the contacts of its rigid body.
     //! Sensors (IMU, odometry, cameras, ...) are separate ROS 2 sensor components on the same entity or its children.
     class MultirotorComponent
         : public AZ::Component
@@ -42,6 +51,9 @@ namespace Multirotor
         void SpinRotorVisuals(float deltaTime);
         void WaitForGround();
         void Release();
+        void OnCollision(const AzPhysics::CollisionEvent& event);
+        bool IsGroundContact(const AzPhysics::CollisionEvent& event) const;
+        void PublishOnGround(float fixedDeltaTime);
 
         MultirotorConfiguration m_config;
         MultirotorController m_controller;
@@ -52,9 +64,18 @@ namespace Multirotor
         bool m_waitingForGround = false;
         float m_groundWaitTime = 0.0f; //!< [s, real time]
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
+        AzPhysics::SimulatedBodyEvents::OnCollisionBegin::Handler m_collisionBeginHandler;
+        AzPhysics::SimulatedBodyEvents::OnCollisionPersist::Handler m_collisionPersistHandler;
+        AzPhysics::SimulatedBodyEvents::OnCollisionEnd::Handler m_collisionEndHandler;
+
+        //! Pairs of shapes touching in a ground contact. Kept between events because they stop while the body sleeps.
+        //! Ordered by address, because the pointers are only compared.
+        AZStd::set<AZStd::pair<const Physics::Shape*, const Physics::Shape*>> m_groundContacts;
+        float m_timeSinceOnGroundPublish = 0.0f; //!< [s, sim time]
 
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_attitudeSubscription;
         rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_attitudeRateSubscription;
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr m_onGroundPublisher;
 
         AZStd::mutex m_commandMutex;
         MultirotorController::Command m_command; //!< Guarded by m_commandMutex.

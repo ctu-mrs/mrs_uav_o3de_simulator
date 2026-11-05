@@ -98,11 +98,14 @@ namespace Multirotor
     }
 
     MultirotorConfiguration::MultirotorConfiguration()
+        : m_onGroundTopic(rclcpp::QoS(10)) // Reliable, as it is a state and not a sensor stream.
     {
         m_attitudeCmdTopic.m_type = "geometry_msgs::msg::PoseStamped";
         m_attitudeCmdTopic.m_topic = "cmd/attitude";
         m_attitudeRateCmdTopic.m_type = "geometry_msgs::msg::TwistStamped";
         m_attitudeRateCmdTopic.m_topic = "cmd/attitude_rate";
+        m_onGroundTopic.m_type = "std_msgs::msg::Bool";
+        m_onGroundTopic.m_topic = "on_ground";
     }
 
     void MultirotorConfiguration::Reflect(AZ::ReflectContext* context)
@@ -120,6 +123,8 @@ namespace Multirotor
                 ->Field("Controller", &MultirotorConfiguration::m_controller)
                 ->Field("AttitudeCmdTopic", &MultirotorConfiguration::m_attitudeCmdTopic)
                 ->Field("AttitudeRateCmdTopic", &MultirotorConfiguration::m_attitudeRateCmdTopic)
+                ->Field("OnGroundTopic", &MultirotorConfiguration::m_onGroundTopic)
+                ->Field("OnGroundRate", &MultirotorConfiguration::m_onGroundRate)
                 ->Field("CommandTimeout", &MultirotorConfiguration::m_commandTimeout)
                 ->Field("GroundWaitTimeout", &MultirotorConfiguration::m_groundWaitTimeout);
 
@@ -131,6 +136,9 @@ namespace Multirotor
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_controller, "Controller", "Onboard controller")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_attitudeCmdTopic, "Attitude command", "")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_attitudeRateCmdTopic, "Attitude rate command", "")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_onGroundTopic, "On ground", "")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_onGroundRate, "On ground rate", "[Hz, sim time]")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_commandTimeout, "Command timeout", "[s], 0 disables")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f);
             }

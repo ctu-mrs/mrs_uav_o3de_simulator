@@ -16,6 +16,19 @@
 
 namespace Multirotor
 {
+    namespace
+    {
+        //! A contact is on the ground if its normal is within 45 deg of vertical. The sign of the normal is not used.
+        constexpr float MinGroundContactNormalZ = 0.7071f;
+
+        auto ShapePair(const AzPhysics::CollisionEvent& event)
+        {
+            const Physics::Shape* first = event.m_shape1;
+            const Physics::Shape* second = event.m_shape2;
+            return AZStd::make_pair(AZStd::min(first, second), AZStd::max(first, second));
+        }
+    } // namespace
+
     void MultirotorComponent::Reflect(AZ::ReflectContext* context)
     {
         MultirotorConfiguration::Reflect(context);
@@ -89,6 +102,8 @@ namespace Multirotor
                 command.m_throttle = aznumeric_cast<float>(msg.twist.linear.z);
                 SetCommand(command);
             });
+        m_onGroundPublisher =
+            node->create_publisher<std_msgs::msg::Bool>(namespaced(m_config.m_onGroundTopic.m_topic).c_str(), m_config.m_onGroundTopic.GetQoS());
 
         // The rigid body is created by the physics component's activation, which may come after ours.
         AZ::TickBus::Handler::BusConnect();
@@ -98,8 +113,13 @@ namespace Multirotor
     {
         AZ::TickBus::Handler::BusDisconnect();
         m_sceneSimulationStartHandler.Disconnect();
+        m_collisionBeginHandler.Disconnect();
+        m_collisionPersistHandler.Disconnect();
+        m_collisionEndHandler.Disconnect();
+        m_groundContacts.clear();
         m_attitudeSubscription.reset();
         m_attitudeRateSubscription.reset();
+        m_onGroundPublisher.reset();
         m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
         m_waitingForGround = false;
     }
@@ -209,6 +229,61 @@ namespace Multirotor
             },
             aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Components));
         sceneInterface->RegisterSceneSimulationStartHandler(m_sceneHandle, m_sceneSimulationStartHandler);
+
+        auto onCollision = [this]([[maybe_unused]] AzPhysics::SimulatedBodyHandle bodyHandle, const AzPhysics::CollisionEvent& event)
+        {
+            OnCollision(event);
+        };
+        m_collisionBeginHandler = AzPhysics::SimulatedBodyEvents::OnCollisionBegin::Handler(onCollision);
+        m_collisionPersistHandler = AzPhysics::SimulatedBodyEvents::OnCollisionPersist::Handler(onCollision);
+        m_collisionEndHandler = AzPhysics::SimulatedBodyEvents::OnCollisionEnd::Handler(onCollision);
+        AzPhysics::SimulatedBodyEvents::RegisterOnCollisionBeginHandler(m_sceneHandle, m_bodyHandle, m_collisionBeginHandler);
+        AzPhysics::SimulatedBodyEvents::RegisterOnCollisionPersistHandler(m_sceneHandle, m_bodyHandle, m_collisionPersistHandler);
+        AzPhysics::SimulatedBodyEvents::RegisterOnCollisionEndHandler(m_sceneHandle, m_bodyHandle, m_collisionEndHandler);
+    }
+
+    void MultirotorComponent::OnCollision(const AzPhysics::CollisionEvent& event)
+    {
+        if (event.m_type == AzPhysics::CollisionEvent::Type::End)
+        {
+            m_groundContacts.erase(ShapePair(event));
+        }
+        else if (IsGroundContact(event))
+        {
+            m_groundContacts.insert(ShapePair(event));
+        }
+        else if (!event.m_contacts.empty())
+        {
+            m_groundContacts.erase(ShapePair(event));
+        }
+    }
+
+    bool MultirotorComponent::IsGroundContact(const AzPhysics::CollisionEvent& event) const
+    {
+        // The other end of a near-vertical contact below the UAV is the ground. One above it is a ceiling.
+        const float bodyHeight = event.m_body1->GetPosition().GetZ();
+        for (const AzPhysics::Contact& contact : event.m_contacts)
+        {
+            if (AZStd::abs(contact.m_normal.GetZ()) >= MinGroundContactNormalZ && contact.m_position.GetZ() < bodyHeight)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void MultirotorComponent::PublishOnGround(float fixedDeltaTime)
+    {
+        m_timeSinceOnGroundPublish += fixedDeltaTime;
+        if (m_config.m_onGroundRate <= 0.0f || m_timeSinceOnGroundPublish < 1.0f / m_config.m_onGroundRate)
+        {
+            return;
+        }
+        m_timeSinceOnGroundPublish -= 1.0f / m_config.m_onGroundRate;
+
+        std_msgs::msg::Bool message;
+        message.data = !m_groundContacts.empty();
+        m_onGroundPublisher->publish(message);
     }
 
     void MultirotorComponent::SpinRotorVisuals(float deltaTime)
@@ -276,5 +351,7 @@ namespace Multirotor
             body->ApplyLinearImpulseAtWorldPoint(bodyUp * (thrusts[i] * fixedDeltaTime), rotorWorld);
         }
         body->ApplyAngularImpulse(bodyUp * (m_controller.GetYawReactionTorque() * fixedDeltaTime));
+
+        PublishOnGround(fixedDeltaTime);
     }
 } // namespace Multirotor

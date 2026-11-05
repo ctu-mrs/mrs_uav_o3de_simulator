@@ -54,7 +54,7 @@ ly_add_target(
             Gem::Atom_RPI.Public
 )
 
-target_depends_on_ros2_packages(${gem_name}.Private.Object rclcpp geometry_msgs sensor_msgs)
+target_depends_on_ros2_packages(${gem_name}.Private.Object rclcpp geometry_msgs sensor_msgs std_msgs)
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface
 ly_add_target(

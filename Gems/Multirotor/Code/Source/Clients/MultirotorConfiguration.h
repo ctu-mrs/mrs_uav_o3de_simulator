@@ -78,6 +78,8 @@ namespace Multirotor
 
         ROS2::TopicConfiguration m_attitudeCmdTopic; //!< geometry_msgs/PoseStamped: pose.orientation is the attitude, pose.position.z the throttle.
         ROS2::TopicConfiguration m_attitudeRateCmdTopic; //!< geometry_msgs/TwistStamped: twist.angular is the body rate, twist.linear.z the throttle.
+        ROS2::TopicConfiguration m_onGroundTopic; //!< std_msgs/Bool: whether the UAV stands on something. Not published while it is held for the ground.
+        float m_onGroundRate = 100.0f; //!< [Hz, sim time]
         float m_commandTimeout = 0.5f; //!< Throttle is cut when no command arrives for this long [s, sim time]. 0 disables.
         //! The UAV is held in place until a ray finds ground below it, because worlds such as a splat's collision
         //! mesh can appear long after the physics starts. It is released after this long regardless [s]. 0 disables.

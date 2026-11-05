@@ -44,8 +44,9 @@ CAMERA_CONFIG = {
 CAMERA_RATE = 60.0  # [Hz], in sim time; this renders the camera on every frame of the 17 ms simulation step.
 
 # Livox Mid-360, as in sdf/components/lidar/livox/livox.sdf.jinja. Its real scan pattern is non-repetitive,
-# this is a regular grid. The physics lidar backend has no noise, and the rays pass above the prop colliders.
-LIDAR_POSITION = [0.0, 0.0, 0.13]  # [m], in the body frame: the mesh, on the x500's lidar mount.
+# this is a regular grid. The physics lidar backend has no noise, and cannot exclude the drone from its rays.
+LIDAR_POSITION = [0.14, 0.0, -0.08]  # [m], in the body frame: the mesh, below the camera.
+LIDAR_ROTATION = [0.0, 135.0, 0.0]  # [deg]; the sensor's top points forward, 45 deg below the horizon.
 LIDAR_OPTICAL_Z = 0.037725  # [m], from the mesh's origin to the optical center.
 LIDAR_RATE = 10.0  # [Hz]
 LIDAR_PARAMETERS = {
@@ -196,7 +197,13 @@ def lidar_entities(drone):
     lidar = entity_key("lidar")
     return lidar_mesh, {
         lidar_mesh: make_entity(
-            lidar_mesh, "lidar_mesh", drone, [mesh("livox_mid360")], children=[lidar], position=LIDAR_POSITION
+            lidar_mesh,
+            "lidar_mesh",
+            drone,
+            [mesh("livox_mid360")],
+            children=[lidar],
+            position=LIDAR_POSITION,
+            rotation=LIDAR_ROTATION,
         ),
         lidar: make_entity(
             lidar,

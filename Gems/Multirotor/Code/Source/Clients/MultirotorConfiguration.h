@@ -64,7 +64,12 @@ namespace Multirotor
 
         MultirotorConfiguration();
 
-        AZStd::vector<RotorConfiguration> m_rotors; //!< Defaults to a 0.4 m quad in X configuration (PX4 motor order).
+        //! Quad X, 0.4 m motor-to-motor diagonal, PX4 motor order: front-right, rear-left, front-left, rear-right.
+        static AZStd::vector<RotorConfiguration> DefaultRotors();
+
+        //! Empty selects DefaultRotors() on activation. The constructor must leave this empty: deserialization
+        //! appends to the vector, so preset elements would be duplicated once per pipeline pass.
+        AZStd::vector<RotorConfiguration> m_rotors;
         MotorConfiguration m_motor;
         ControllerConfiguration m_controller;
 

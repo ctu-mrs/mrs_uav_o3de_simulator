@@ -48,6 +48,10 @@ namespace Multirotor
         m_simTime = 0.0;
         m_command = {};
         m_commandTime = 0.0;
+        if (m_config.m_rotors.empty())
+        {
+            m_config.m_rotors = MultirotorConfiguration::DefaultRotors();
+        }
 
         AZStd::string ns;
         ROS2::ROS2FrameComponentBus::EventResult(ns, GetEntityId(), &ROS2::ROS2FrameComponentRequests::GetNamespace);

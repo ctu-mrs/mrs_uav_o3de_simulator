@@ -12,6 +12,7 @@ namespace UnitTest
     protected:
         void SetUp() override
         {
+            m_config.m_rotors = MultirotorConfiguration::DefaultRotors();
             ASSERT_TRUE(m_controller.Configure(m_config, AZ::Vector3(0.02f, 0.02f, 0.04f)));
         }
 
@@ -106,6 +107,13 @@ namespace UnitTest
         const AZ::Vector3 b = m_controller.AttitudeControl(-desired, AZ::Quaternion::CreateIdentity());
         EXPECT_TRUE(a.IsClose(b));
         EXPECT_GT(a.GetZ(), 0.0f);
+    }
+
+    TEST(MultirotorConfiguration, ConstructorLeavesRotorsEmpty)
+    {
+        // Deserialization appends to the vector, so presetting it here multiplies rotors and thrust.
+        EXPECT_TRUE(MultirotorConfiguration().m_rotors.empty());
+        EXPECT_EQ(MultirotorConfiguration::DefaultRotors().size(), 4);
     }
 
     TEST(MultirotorControllerConfigure, RejectsTooFewRotors)

@@ -81,17 +81,19 @@ namespace Multirotor
         }
     }
 
-    MultirotorConfiguration::MultirotorConfiguration()
+    AZStd::vector<RotorConfiguration> MultirotorConfiguration::DefaultRotors()
     {
-        // Quad X, 0.4 m motor-to-motor diagonal, PX4 motor order: front-right, rear-left, front-left, rear-right.
         constexpr float d = 0.1414f;
-        m_rotors = {
+        return {
             { AZ::Vector3(d, -d, 0.0f), false },
             { AZ::Vector3(-d, d, 0.0f), false },
             { AZ::Vector3(d, d, 0.0f), true },
             { AZ::Vector3(-d, -d, 0.0f), true },
         };
+    }
 
+    MultirotorConfiguration::MultirotorConfiguration()
+    {
         m_attitudeCmdTopic.m_type = "mrs_msgs::msg::HwApiAttitudeCmd";
         m_attitudeCmdTopic.m_topic = "hw_api/attitude_cmd";
         m_attitudeRateCmdTopic.m_type = "mrs_msgs::msg::HwApiAttitudeRateCmd";
@@ -118,7 +120,7 @@ namespace Multirotor
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {
                 ec->Class<MultirotorConfiguration>("Multirotor configuration", "")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_rotors, "Rotors", "Rotor layout")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_rotors, "Rotors", "Rotor layout. Empty selects a 0.4 m quad X.")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_motor, "Motor", "Motor model")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_controller, "Controller", "Onboard controller")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MultirotorConfiguration::m_attitudeCmdTopic, "Attitude command", "")

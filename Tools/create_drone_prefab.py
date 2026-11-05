@@ -8,7 +8,7 @@ processed by the Asset Processor first, because the prefab references them by as
 Prefabs are generated as JSON because the Editor's Python API cannot do it: entities it creates
 belong to the level instance, CreatePrefab silently drops those, and an in-memory prefab cannot
 be saved. Only non-default values are written; every other field takes its C++ default, which
-includes the IMU (imu, 50 Hz) and odometry (odom, 10 Hz) publishers.
+includes the IMU (imu) and odometry (odom) publishers.
 
 Ids derive from names, so reruns are stable.
 """
@@ -25,8 +25,9 @@ LEVEL_CONTAINER = "Entity_[1146574390643]"
 DRONE_SOURCE = "Assets/Drone/Multirotor.prefab"
 
 DRONE_NAME = "uav1"  # Also the ROS 2 namespace: /uav1/cmd/attitude_rate, /uav1/imu, ...
-SPAWN_POSITION = [1.5, 1.5, 0.2]  # [m], in the level; the legs reach 0.1525 m below the origin.
+SPAWN_POSITION = [1.5, 1.5, 0.155]  # [m], in the level; the legs reach 0.1525 m below the origin.
 MASS = 2.0  # [kg]; with the default motor model this hovers at ~0.5 throttle.
+SENSOR_RATE = 250.0  # [Hz]; the rate of the MRS HW API.
 
 # Geometry of models/mrs_robots_description/sdf/drones/x500.sdf.jinja in mrs_uav_gazebo_simulation.
 INERTIA_DIAGONAL = [0.03167, 0.03167, 0.0625]  # Solid cylinder, r = 0.25 m, h = 0.05 m.
@@ -139,6 +140,7 @@ def make_drone_prefab():
         for x_sign, y_sign, clockwise in ROTORS
     ]
     i_xx, i_yy, i_zz = INERTIA_DIAGONAL
+    sensor_config = {"Frequency (HZ)": SENSOR_RATE}
 
     entities = {
         drone: make_entity(
@@ -161,8 +163,8 @@ def make_drone_prefab():
                 *drone_colliders(),
                 {"$type": "ROS2FrameEditorComponent"},
                 wrapped(MULTIROTOR_TYPE, Config={"Rotors": rotors}),
-                wrapped("ROS2ImuSensorComponent"),
-                wrapped("ROS2OdometrySensorComponent"),
+                wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
+                wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
             ],
             children=[visual, *props],
         ),

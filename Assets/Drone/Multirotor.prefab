@@ -366,14 +366,20 @@
                 "ROS2ImuSensorComponent": {
                     "$type": "GenericComponentWrapper",
                     "m_template": {
-                        "$type": "ROS2ImuSensorComponent"
+                        "$type": "ROS2ImuSensorComponent",
+                        "SensorConfiguration": {
+                            "Frequency (HZ)": 250.0
+                        }
                     },
                     "Id": 3661328073114041187
                 },
                 "ROS2OdometrySensorComponent": {
                     "$type": "GenericComponentWrapper",
                     "m_template": {
-                        "$type": "ROS2OdometrySensorComponent"
+                        "$type": "ROS2OdometrySensorComponent",
+                        "SensorConfiguration": {
+                            "Frequency (HZ)": 250.0
+                        }
                     },
                     "Id": 8327232087777190765
                 }

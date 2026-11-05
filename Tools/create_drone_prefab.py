@@ -39,7 +39,7 @@ CAMERA_CONFIG = {
     "Color": True,
     "Depth": False,
     "ClipNear": 0.02,
-    "ClipFar": 100.0,
+    "ClipFar": 5000.0,  # Large worlds, such as a splat with its surroundings.
 }
 CAMERA_RATE = 30.0  # [Hz]
 

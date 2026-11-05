@@ -156,7 +156,9 @@
                         "VerticalFieldOfViewDeg": 60.0,
                         "Depth": false,
                         "ClipNear": 0.019999999552965164,
-                        "ClipFar": 5000.0
+                        "ClipFar": 5000.0,
+                        "Width": 1280,
+                        "Height": 720
                     },
                     "SensorConfig": {
                         "Frequency (HZ)": 60.0,

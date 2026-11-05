@@ -34,8 +34,8 @@ CAMERA_POSITION = [0.14, 0.0, -0.02]  # [m], in the body frame, in front of the 
 CAMERA_ROTATION = [180.0, 90.0, 90.0]  # [deg]
 CAMERA_CONFIG = {
     "VerticalFieldOfViewDeg": 60.0,
-    "Width": 640,
-    "Height": 480,
+    "Width": 1280,
+    "Height": 720,
     "Color": True,
     "Depth": False,
     "ClipNear": 0.02,

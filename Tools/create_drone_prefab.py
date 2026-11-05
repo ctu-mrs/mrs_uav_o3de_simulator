@@ -64,12 +64,6 @@ LIDAR_PARAMETERS = {
 # The game view follows the drone. Atom cameras look along the entity's Y.
 FOLLOW_CAMERA_POSITION = [-1.2, 0.0, 0.55]  # [m], in the body frame, behind and above.
 FOLLOW_CAMERA_ROTATION = [0.0, 25.0, -90.0]  # [deg]; faces forward, tilted down at the drone.
-# The ROSbot prefab's own camera would otherwise compete for the game view.
-ROSBOT_SOURCE = "RosbotXL/ROSBotXL_Slamtec.prefab"
-ROSBOT_CAMERA = (
-    "/Instances/Instance_[1711844155761]/Entities/Entity_[5417796519198]"
-    "/Components/Component_[16056351394850261418]"
-)
 
 # Geometry of models/mrs_robots_description/sdf/drones/x500.sdf.jinja in mrs_uav_gazebo_simulation.
 INERTIA_DIAGONAL = [0.03167, 0.03167, 0.0625]  # Solid cylinder, r = 0.25 m, h = 0.05 m.
@@ -347,11 +341,6 @@ def add_instance_to_level():
             "Source": DRONE_SOURCE,
             "Patches": patches,
         }
-
-    for rosbot in (value for value in instances.values() if value["Source"] == ROSBOT_SOURCE):
-        path = f"{ROSBOT_CAMERA}/Controller/Configuration/MakeActiveViewOnActivation"
-        if not any(patch["path"] == path for patch in rosbot["Patches"]):
-            rosbot["Patches"].append({"op": "add", "path": path, "value": False})
 
     LEVEL_PREFAB.write_text(json.dumps(level, indent=4) + "\n")
 

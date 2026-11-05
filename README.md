@@ -7,9 +7,9 @@ The dynamics and the attitude and rate controllers run inside O3DE at 500 Hz. RO
 ## Requirements
 
 - O3DE 26.05 SDK in `/opt/O3DE/26.05`, on Linux
-- ROS 2 Jazzy, with `control_msgs`, `ackermann_msgs`, and `rmw_zenoh_cpp`
+- ROS 2 Jazzy, with `control_msgs` and `ackermann_msgs`, which the `ROS2` Gem requires, and `rmw_zenoh_cpp`
 - Clang
-- These Gems, registered with `o3de.sh register --gem-path`: `ROS2` 4.3.0, `ROS2Sensors`, `ROS2Controllers`, `ROS2SampleRobots`, `ROS2RobotImporter`, `LevelGeoreferencing`, and `WarehouseAssets`
+- These Gems, registered with `o3de.sh register --gem-path`: `ROS2` 4.3.0, `ROS2Sensors`, `LevelGeoreferencing`, and `WarehouseAssets`
 
 ## Build
 

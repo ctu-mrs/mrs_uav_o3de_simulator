@@ -12,7 +12,7 @@ Design decision: dynamics run entirely inside O3DE (PhysX rigid body). The fast 
 
 ROS 2 must also be sourced before starting the Editor, Project Manager, or Asset Processor, so start them with `Tools/run_editor.sh` (`--manager` for Project Manager). Otherwise the asset builders cannot load the ROS and Multirotor Gems and silently compile prefabs without those components while reporting success, and saving in the Editor removes the components from the prefabs for good; the drone then has no topics. To recover, delete the affected `.spawnable` files under `Cache/linux` and run `AssetProcessorBatch` with ROS sourced.
 
-ROS 2 must be sourced for every configure and build (the `ROS2Controllers` Gem requires `control_msgs` and `ackermann_msgs`):
+ROS 2 must be sourced for every configure and build (the `ROS2` Gem requires `control_msgs` and `ackermann_msgs`):
 
 ```sh
 source /opt/ros/jazzy/setup.zsh
@@ -52,5 +52,5 @@ Conventions: body frame is FLU (O3DE and ROS agree, Z up). Throttle ∈ [0,1] is
 - Spawnables store serialized component data and are not rebuilt when a Gem library changes. After changing a component's serialized fields or defaults, delete the affected `.spawnable` files under `Cache/linux` and run `AssetProcessorBatch`, or the game keeps using the old values.
 - The game reads a compiled copy of `Registry/*.setreg` from `Cache/linux/bootstrap.*.setreg`, so run the Asset Processor after changing them.
 - `DemoLevel` is the warehouse and the default level. `ModelForgeSplat` is optional and not part of this project, so the tracked `project.json` must not list it. A Gem is only active through `project.json`: the Asset Processor takes its Gem list and scan folders from there, and it deletes the compiled assets of Gems that are not listed.
-- External Gems (`ROS2` 4.3.0, `LevelGeoreferencing`, `ROS2Sensors`, `ROS2Controllers`, ...) live in `~/O3DE/Gems` and are registered in `~/.o3de/o3de_manifest.json`, not vendored in this repo.
+- External Gems (`ROS2` 4.3.0, `LevelGeoreferencing`, `ROS2Sensors`, `WarehouseAssets`) live in `~/O3DE/Gems` and are registered in `~/.o3de/o3de_manifest.json`, not vendored in this repo.
 - `.gitattributes` with Git LFS was intentionally dropped (git-lfs is not installed).

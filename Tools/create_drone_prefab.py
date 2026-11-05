@@ -29,6 +29,20 @@ SPAWN_POSITION = [1.5, 1.5, 0.155]  # [m], in the level; the legs reach 0.1525 m
 MASS = 2.0  # [kg]; with the default motor model this hovers at ~0.5 throttle.
 SENSOR_RATE = 250.0  # [Hz]; the rate of the MRS HW API.
 
+# Forward-facing RGB camera. ROS cameras look along the entity's Z with X right and Y down.
+CAMERA_POSITION = [0.14, 0.0, -0.02]  # [m], in the body frame, in front of the frame and below the props.
+CAMERA_ROTATION = [180.0, 90.0, 90.0]  # [deg]
+CAMERA_CONFIG = {
+    "VerticalFieldOfViewDeg": 60.0,
+    "Width": 640,
+    "Height": 480,
+    "Color": True,
+    "Depth": False,
+    "ClipNear": 0.02,
+    "ClipFar": 100.0,
+}
+CAMERA_RATE = 30.0  # [Hz]
+
 # Geometry of models/mrs_robots_description/sdf/drones/x500.sdf.jinja in mrs_uav_gazebo_simulation.
 INERTIA_DIAGONAL = [0.03167, 0.03167, 0.0625]  # Solid cylinder, r = 0.25 m, h = 0.05 m.
 ROTOR_XY = 0.1812  # [m]
@@ -106,10 +120,26 @@ def drone_colliders():
     return colliders
 
 
-def make_entity(entity_id, name, parent, components, children=(), position=None):
+def camera_sensor():
+    return {
+        "$type": "ROS2CameraSensorEditorComponent",
+        "CameraSensorConfig": CAMERA_CONFIG,
+        "SensorConfig": {
+            "Frequency (HZ)": CAMERA_RATE,
+            "Publishers": {
+                "Color Camera Info": {"Type": "sensor_msgs::msg::CameraInfo", "Topic": "color_camera_info"},
+                "Color Image": {"Type": "sensor_msgs::msg::Image", "Topic": "camera_image_color"},
+            },
+        },
+    }
+
+
+def make_entity(entity_id, name, parent, components, children=(), position=None, rotation=None):
     transform = {"$type": TRANSFORM_TYPE, "Parent Entity": parent}
     if position is not None:
         transform["Transform Data"] = {"Translate": position}
+        if rotation is not None:
+            transform["Transform Data"]["Rotate"] = rotation
 
     all_components = {"TransformComponent": transform}
     for type_name in EDITOR_COMPONENTS:
@@ -134,6 +164,7 @@ def make_entity(entity_id, name, parent, components, children=(), position=None)
 def make_drone_prefab():
     drone = entity_key(DRONE_NAME)
     visual = entity_key("visual")
+    camera = entity_key("camera")
     props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
     rotors = [
         {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise}
@@ -166,9 +197,17 @@ def make_drone_prefab():
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
                 wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
             ],
-            children=[visual, *props],
+            children=[visual, camera, *props],
         ),
         visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
+        camera: make_entity(
+            camera,
+            "camera",
+            drone,
+            [{"$type": "ROS2FrameEditorComponent"}, camera_sensor()],
+            position=CAMERA_POSITION,
+            rotation=CAMERA_ROTATION,
+        ),
     }
     for i, (prop, rotor) in enumerate(zip(props, rotors)):
         model = "x500_prop_cw" if rotor["Clockwise"] else "x500_prop_ccw"

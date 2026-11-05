@@ -78,6 +78,7 @@
                     "$type": "EditorEntitySortComponent",
                     "Child Entity Order": [
                         "Entity_[442335936546]",
+                        "Entity_[133334939082]",
                         "Entity_[83716650117]",
                         "Entity_[481570606521]",
                         "Entity_[986114408031]",
@@ -440,6 +441,91 @@
                         }
                     },
                     "Id": 399205932804073292
+                }
+            }
+        },
+        "Entity_[133334939082]": {
+            "Id": "Entity_[133334939082]",
+            "Name": "camera",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "Entity_[933407460906]",
+                    "Transform Data": {
+                        "Translate": [
+                            0.14,
+                            0.0,
+                            -0.02
+                        ],
+                        "Rotate": [
+                            180.0,
+                            90.0,
+                            90.0
+                        ]
+                    },
+                    "Id": 2462862460091746974
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 907548663640480335
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 7914990658581864717
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Id": 757957078168233511
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 7829952189731337069
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 5927785301506847977
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 9142627677888914517
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 6135095234355219180
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 6361163667796046906
+                },
+                "ROS2FrameEditorComponent": {
+                    "$type": "ROS2FrameEditorComponent",
+                    "Id": 5298418622856817686
+                },
+                "ROS2CameraSensorEditorComponent": {
+                    "$type": "ROS2CameraSensorEditorComponent",
+                    "CameraSensorConfig": {
+                        "VerticalFieldOfViewDeg": 60.0,
+                        "Width": 640,
+                        "Height": 480,
+                        "Color": true,
+                        "Depth": false,
+                        "ClipNear": 0.02,
+                        "ClipFar": 100.0
+                    },
+                    "SensorConfig": {
+                        "Frequency (HZ)": 30.0,
+                        "Publishers": {
+                            "Color Camera Info": {
+                                "Type": "sensor_msgs::msg::CameraInfo",
+                                "Topic": "color_camera_info"
+                            },
+                            "Color Image": {
+                                "Type": "sensor_msgs::msg::Image",
+                                "Topic": "camera_image_color"
+                            }
+                        }
+                    },
+                    "Id": 4484076004440991339
                 }
             }
         },

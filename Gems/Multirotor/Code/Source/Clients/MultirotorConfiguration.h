@@ -73,8 +73,8 @@ namespace Multirotor
         MotorConfiguration m_motor;
         ControllerConfiguration m_controller;
 
-        ROS2::TopicConfiguration m_attitudeCmdTopic; //!< mrs_msgs/HwApiAttitudeCmd
-        ROS2::TopicConfiguration m_attitudeRateCmdTopic; //!< mrs_msgs/HwApiAttitudeRateCmd
+        ROS2::TopicConfiguration m_attitudeCmdTopic; //!< geometry_msgs/PoseStamped: pose.orientation is the attitude, pose.position.z the throttle.
+        ROS2::TopicConfiguration m_attitudeRateCmdTopic; //!< geometry_msgs/TwistStamped: twist.angular is the body rate, twist.linear.z the throttle.
         float m_commandTimeout = 0.5f; //!< Throttle is cut when no command arrives for this long [s, sim time]. 0 disables.
     };
 } // namespace Multirotor

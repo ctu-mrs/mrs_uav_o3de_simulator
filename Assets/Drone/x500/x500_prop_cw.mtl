@@ -1,0 +1,5 @@
+newmtl carbon_light
+Kd 1.000 1.000 1.000
+map_Kd carbon_light.jpg
+newmtl grey
+Kd 0.450 0.450 0.450

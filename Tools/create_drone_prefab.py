@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate the multirotor drone prefab and reference it from DemoLevel.
 
-Standalone, no Editor needed; the Asset Processor picks the files up on its own:
+Standalone, no Editor needed, but the x500 models from Tools/convert_x500_meshes.py must have been
+processed by the Asset Processor first, because the prefab references them by asset id:
     python3 Tools/create_drone_prefab.py
 
 Prefabs are generated as JSON because the Editor's Python API cannot do it: entities it creates
@@ -14,6 +15,8 @@ Ids derive from names, so reruns are stable.
 
 import hashlib
 import json
+import sqlite3
+import uuid
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -21,17 +24,20 @@ LEVEL_PREFAB = PROJECT_ROOT / "Levels" / "DemoLevel" / "DemoLevel.prefab"
 LEVEL_CONTAINER = "Entity_[1146574390643]"
 DRONE_SOURCE = "Assets/Drone/Multirotor.prefab"
 
-DRONE_NAME = "uav1"  # Also the ROS 2 namespace: /uav1/hw_api/attitude_rate_cmd, /uav1/imu, ...
-SPAWN_POSITION = [1.5, 1.5, 0.3]  # [m], in the level.
+DRONE_NAME = "uav1"  # Also the ROS 2 namespace: /uav1/cmd/attitude_rate, /uav1/imu, ...
+SPAWN_POSITION = [1.5, 1.5, 0.2]  # [m], in the level; the legs reach 0.1525 m below the origin.
 MASS = 2.0  # [kg]; with the default motor model this hovers at ~0.5 throttle.
-BODY_SIZE = [0.4, 0.4, 0.1]  # [m]
+
+# Geometry of models/mrs_robots_description/sdf/drones/x500.sdf.jinja in mrs_uav_gazebo_simulation.
+INERTIA_DIAGONAL = [0.03167, 0.03167, 0.0625]  # Solid cylinder, r = 0.25 m, h = 0.05 m.
+ROTOR_XY = 0.1812  # [m]
+ROTOR_Z = 0.057  # [m]
+LEG_XY = 0.13  # [m]
+# PX4 motor order, as in the SDF: (x sign, y sign, clockwise).
+ROTORS = [(1, -1, False), (-1, 1, False), (1, 1, True), (-1, -1, True)]
 
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
-BOX_MODEL = {
-    "assetId": {"guid": "{C15CD465-9589-56ED-945F-8416FA4798A3}", "subId": 284301017},
-    "assetHint": "objects/_primitives/_box_1x1.fbx.azmodel",
-}
 EDITOR_COMPONENTS = [
     "EditorDisabledCompositionComponent",
     "EditorEntityIconComponent",
@@ -53,9 +59,50 @@ def entity_key(name):
     return f"Entity_[{stable_id('entity', name) % 10**12}]"
 
 
-def wrapped(template_type):
+def wrapped(template_type, **fields):
     """Serialized form of a runtime component with no Editor counterpart."""
-    return {"$type": "GenericComponentWrapper", "m_template": {"$type": template_type}}
+    return {"$type": "GenericComponentWrapper", "m_template": {"$type": template_type, **fields}}
+
+
+def model_asset(name):
+    """Asset reference of a processed model, from the Asset Processor database."""
+    product = f"linux/assets/drone/x500/{name}.obj.azmodel"
+    database = sqlite3.connect(f"file:{PROJECT_ROOT / 'Cache' / 'assetdb.sqlite'}?mode=ro", uri=True)
+    row = database.execute(
+        "SELECT s.SourceGuid, p.SubID FROM Products p JOIN Jobs j ON p.JobPK = j.JobID "
+        "JOIN Sources s ON j.SourcePK = s.SourceID WHERE lower(p.ProductName) = ?",
+        (product,),
+    ).fetchone()
+    if row is None:
+        raise SystemExit(f"{product} not found; run the Asset Processor first")
+    return {
+        "assetId": {"guid": "{" + str(uuid.UUID(bytes=row[0])).upper() + "}", "subId": row[1] & 0xFFFFFFFF},
+        "assetHint": product.removeprefix("linux/"),
+    }
+
+
+def mesh(name):
+    return {
+        "$type": "AZ::Render::EditorMeshComponent",
+        "Controller": {"Configuration": {"ModelAsset": model_asset(name)}},
+    }
+
+
+def box_collider(size, position):
+    return {
+        "$type": "EditorColliderComponent",
+        "ColliderConfiguration": {"Position": position},
+        "ShapeConfiguration": {"ShapeType": 1, "Box": {"Configuration": size}},
+    }
+
+
+def drone_colliders():
+    """Boxes approximating the SDF's collision cylinders: body, legs, and prop discs."""
+    colliders = [box_collider([0.2, 0.2, 0.1], [0.0, 0.0, -0.05])]
+    for x_sign, y_sign, _ in ROTORS:
+        colliders.append(box_collider([0.03, 0.03, 0.165], [x_sign * LEG_XY, y_sign * LEG_XY, -0.07]))
+        colliders.append(box_collider([0.35, 0.02, 0.02], [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z]))
+    return colliders
 
 
 def make_entity(entity_id, name, parent, components, children=(), position=None):
@@ -71,8 +118,12 @@ def make_entity(entity_id, name, parent, components, children=(), position=None)
 
     for component in components:
         template = component.get("m_template", {}).get("$type", "")
-        key = template.split()[-1] if template else component["$type"].split()[-1]
-        all_components[key.replace("::", "_")] = component
+        key = (template or component["$type"]).split()[-1].replace("::", "_")
+        unique_key, count = key, 1
+        while unique_key in all_components:
+            count += 1
+            unique_key = f"{key}_{count}"
+        all_components[unique_key] = component
 
     for key, component in all_components.items():
         component["Id"] = stable_id(name, key)
@@ -82,6 +133,45 @@ def make_entity(entity_id, name, parent, components, children=(), position=None)
 def make_drone_prefab():
     drone = entity_key(DRONE_NAME)
     visual = entity_key("visual")
+    props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
+    rotors = [
+        {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise}
+        for x_sign, y_sign, clockwise in ROTORS
+    ]
+    i_xx, i_yy, i_zz = INERTIA_DIAGONAL
+
+    entities = {
+        drone: make_entity(
+            drone,
+            DRONE_NAME,
+            "ContainerEntity",
+            [
+                {
+                    "$type": "EditorRigidBodyComponent",
+                    "Configuration": {
+                        "entityId": "",
+                        "Compute Mass": False,
+                        "Mass": MASS,
+                        # The colliders are off-center, computing these would tilt the drone.
+                        "Compute COM": False,
+                        "Compute inertia": False,
+                        "Inertia tensor": [i_xx, 0.0, 0.0, 0.0, i_yy, 0.0, 0.0, 0.0, i_zz],
+                    },
+                },
+                *drone_colliders(),
+                {"$type": "ROS2FrameEditorComponent"},
+                wrapped(MULTIROTOR_TYPE, Config={"Rotors": rotors}),
+                wrapped("ROS2ImuSensorComponent"),
+                wrapped("ROS2OdometrySensorComponent"),
+            ],
+            children=[visual, *props],
+        ),
+        visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
+    }
+    for i, (prop, rotor) in enumerate(zip(props, rotors)):
+        model = "x500_prop_cw" if rotor["Clockwise"] else "x500_prop_ccw"
+        entities[prop] = make_entity(prop, f"prop_{i}", drone, [mesh(model)], position=rotor["Position"])
+
     return {
         "ContainerEntity": make_entity(
             "ContainerEntity",
@@ -91,40 +181,7 @@ def make_drone_prefab():
             children=[drone],
             position=[0.0, 0.0, 0.0],  # Written out so the level can patch it.
         ),
-        "Entities": {
-            drone: make_entity(
-                drone,
-                DRONE_NAME,
-                "ContainerEntity",
-                [
-                    {
-                        "$type": "EditorRigidBodyComponent",
-                        "Configuration": {"entityId": "", "Compute Mass": False, "Mass": MASS},
-                    },
-                    {
-                        "$type": "EditorColliderComponent",
-                        "ShapeConfiguration": {"ShapeType": 1, "Box": {"Configuration": BODY_SIZE}},
-                    },
-                    {"$type": "ROS2FrameEditorComponent"},
-                    wrapped(MULTIROTOR_TYPE),
-                    wrapped("ROS2ImuSensorComponent"),
-                    wrapped("ROS2OdometrySensorComponent"),
-                ],
-                children=[visual],
-            ),
-            visual: make_entity(
-                visual,
-                "visual",
-                drone,
-                [
-                    {
-                        "$type": "AZ::Render::EditorMeshComponent",
-                        "Controller": {"Configuration": {"ModelAsset": BOX_MODEL}},
-                    },
-                    {"$type": "EditorNonUniformScaleComponent", "NonUniformScale": BODY_SIZE},
-                ],
-            ),
-        },
+        "Entities": entities,
     }
 
 

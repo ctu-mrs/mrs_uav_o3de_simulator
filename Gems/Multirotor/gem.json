@@ -18,7 +18,7 @@
         ""
     ],
     "icon_path": "preview.png",
-    "requirements": "ROS 2 with mrs_msgs installed and sourced.",
+    "requirements": "ROS 2 installed and sourced.",
     "documentation_url": "",
     "dependencies": [
         "PhysX5",

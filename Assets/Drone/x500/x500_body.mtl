@@ -1,0 +1,15 @@
+newmtl carbon
+Kd 1.000 1.000 1.000
+map_Kd carbon.jpg
+newmtl green
+Kd 0.100 0.450 0.120
+newmtl grey
+Kd 0.450 0.450 0.450
+newmtl dark_grey
+Kd 0.150 0.150 0.150
+newmtl red
+Kd 0.800 0.020 0.020
+newmtl black
+Kd 0.020 0.020 0.020
+newmtl blue
+Kd 0.030 0.740 1.000

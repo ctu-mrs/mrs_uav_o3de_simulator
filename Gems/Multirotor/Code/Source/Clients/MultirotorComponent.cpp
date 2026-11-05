@@ -63,26 +63,26 @@ namespace Multirotor
         };
 
         auto node = ROS2::ROS2Interface::Get()->GetNode();
-        m_attitudeSubscription = node->create_subscription<mrs_msgs::msg::HwApiAttitudeCmd>(
+        m_attitudeSubscription = node->create_subscription<geometry_msgs::msg::PoseStamped>(
             namespaced(m_config.m_attitudeCmdTopic.m_topic).c_str(),
             m_config.m_attitudeCmdTopic.GetQoS(),
-            [this](const mrs_msgs::msg::HwApiAttitudeCmd& msg)
+            [this](const geometry_msgs::msg::PoseStamped& msg)
             {
                 MultirotorController::Command command;
                 command.m_mode = MultirotorController::Mode::Attitude;
-                command.m_attitude = ROS2::ROS2Conversions::FromROS2Quaternion(msg.orientation).GetNormalized();
-                command.m_throttle = aznumeric_cast<float>(msg.throttle);
+                command.m_attitude = ROS2::ROS2Conversions::FromROS2Quaternion(msg.pose.orientation).GetNormalized();
+                command.m_throttle = aznumeric_cast<float>(msg.pose.position.z);
                 SetCommand(command);
             });
-        m_attitudeRateSubscription = node->create_subscription<mrs_msgs::msg::HwApiAttitudeRateCmd>(
+        m_attitudeRateSubscription = node->create_subscription<geometry_msgs::msg::TwistStamped>(
             namespaced(m_config.m_attitudeRateCmdTopic.m_topic).c_str(),
             m_config.m_attitudeRateCmdTopic.GetQoS(),
-            [this](const mrs_msgs::msg::HwApiAttitudeRateCmd& msg)
+            [this](const geometry_msgs::msg::TwistStamped& msg)
             {
                 MultirotorController::Command command;
                 command.m_mode = MultirotorController::Mode::AttitudeRate;
-                command.m_bodyRate = ROS2::ROS2Conversions::FromROS2Vector3(msg.body_rate);
-                command.m_throttle = aznumeric_cast<float>(msg.throttle);
+                command.m_bodyRate = ROS2::ROS2Conversions::FromROS2Vector3(msg.twist.angular);
+                command.m_throttle = aznumeric_cast<float>(msg.twist.linear.z);
                 SetCommand(command);
             });
 

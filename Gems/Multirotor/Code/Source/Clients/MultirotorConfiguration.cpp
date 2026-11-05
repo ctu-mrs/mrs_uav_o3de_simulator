@@ -94,10 +94,10 @@ namespace Multirotor
 
     MultirotorConfiguration::MultirotorConfiguration()
     {
-        m_attitudeCmdTopic.m_type = "mrs_msgs::msg::HwApiAttitudeCmd";
-        m_attitudeCmdTopic.m_topic = "hw_api/attitude_cmd";
-        m_attitudeRateCmdTopic.m_type = "mrs_msgs::msg::HwApiAttitudeRateCmd";
-        m_attitudeRateCmdTopic.m_topic = "hw_api/attitude_rate_cmd";
+        m_attitudeCmdTopic.m_type = "geometry_msgs::msg::PoseStamped";
+        m_attitudeCmdTopic.m_topic = "cmd/attitude";
+        m_attitudeRateCmdTopic.m_type = "geometry_msgs::msg::TwistStamped";
+        m_attitudeRateCmdTopic.m_topic = "cmd/attitude_rate";
     }
 
     void MultirotorConfiguration::Reflect(AZ::ReflectContext* context)

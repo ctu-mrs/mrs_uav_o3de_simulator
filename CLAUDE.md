@@ -10,7 +10,7 @@ Design decision: dynamics run entirely inside O3DE (PhysX rigid body). The fast 
 
 ## Build and test
 
-ROS 2 must be sourced for every configure and build (`mrs_msgs`, `control_msgs`, `ackermann_msgs` are required):
+ROS 2 must be sourced for every configure and build (the `ROS2Controllers` Gem requires `control_msgs` and `ackermann_msgs`):
 
 ```sh
 source /opt/ros/jazzy/setup.zsh
@@ -35,9 +35,10 @@ Keep `-j` at 8 or lower; the machine has 14 GB RAM.
 - `Gems/Multirotor/` — the simulation code:
   - `MultirotorController` — pure AzCore math, no PhysX/ROS: attitude P → inertia-normalized rate PID (+ gyroscopic feed-forward) → minimum-norm allocation `A^T (A A^T)^-1` → first-order motor lag. Unit-tested.
   - `MultirotorConfiguration` — reflected rotor layout (empty selects `DefaultRotors()`: quad X, PX4 motor order), motor coefficients, gains, topics. Don't preset reflected vectors in a constructor: deserialization appends to them.
-  - `MultirotorComponent` — requires `ROS2Frame` and a dynamic rigid body. Subscribes to `mrs_msgs/HwApiAttitudeCmd` and `HwApiAttitudeRateCmd` (namespaced by the entity's ROS2Frame). On every PhysX sub-step (`OnSceneSimulationStart`) it steps the controller and applies per-rotor thrust as impulses at the rotor hubs plus the yaw reaction torque. Throttle is cut after `CommandTimeout` of sim time without commands.
+  - `MultirotorComponent` — requires `ROS2Frame` and a dynamic rigid body. Subscribes to `cmd/attitude` (`geometry_msgs/PoseStamped`: `pose.orientation` + throttle in `pose.position.z`) and `cmd/attitude_rate` (`geometry_msgs/TwistStamped`: body rate in `twist.angular` + throttle in `twist.linear.z`), namespaced by the entity's ROS2Frame. The interface uses standard messages only. On every PhysX sub-step (`OnSceneSimulationStart`) it steps the controller and applies per-rotor thrust as impulses at the rotor hubs plus the yaw reaction torque. Throttle is cut after `CommandTimeout` of sim time without commands.
 - Sensors (IMU, odometry, cameras, lidar) come from the `ROS2Sensors` Gem components placed on the drone prefab, not from this code.
-- `Tools/create_drone_prefab.py` — standalone generator for `Assets/Drone/Multirotor.prefab` and its instance in `DemoLevel` (entity `uav1`, topics under `/uav1`). It writes JSON because the Editor Python API cannot create a prefab from level entities.
+- `Tools/convert_x500_meshes.py` — bakes the x500 meshes and SDF poses from `~/git/mrs_uav_gazebo_simulation` into OBJ models in `Assets/Drone/x500/` (O3DE imports neither `.dae` nor colored `.stl`).
+- `Tools/create_drone_prefab.py` — standalone generator for `Assets/Drone/Multirotor.prefab` and its instance in `DemoLevel` (entity `uav1`, topics under `/uav1`). It writes JSON because the Editor Python API cannot create a prefab from level entities, and takes the x500 rotor layout, colliders, and inertia from the SDF. Run the Asset Processor between the two tools: the prefab references the models by asset id.
 
 Conventions: body frame is FLU (O3DE and ROS agree, Z up). Throttle ∈ [0,1] is proportional to rotor speed, so total thrust = N·k_f·(throttle·ω_max)²; this matches the MRS throttle model with a zero offset.
 

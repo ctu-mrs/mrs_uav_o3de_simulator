@@ -790,7 +790,7 @@
                 {
                     "op": "replace",
                     "path": "/ContainerEntity/Components/TransformComponent/Transform Data/Translate/2",
-                    "value": 0.3
+                    "value": 0.2
                 }
             ]
         }

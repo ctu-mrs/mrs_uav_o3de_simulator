@@ -53,7 +53,7 @@ ly_add_target(
             Gem::ROS2.Static
 )
 
-target_depends_on_ros2_packages(${gem_name}.Private.Object rclcpp mrs_msgs)
+target_depends_on_ros2_packages(${gem_name}.Private.Object rclcpp geometry_msgs)
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface
 ly_add_target(

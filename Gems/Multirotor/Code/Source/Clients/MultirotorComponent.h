@@ -9,14 +9,14 @@
 #include <AzFramework/Physics/Common/PhysicsEvents.h>
 #include <AzFramework/Physics/Common/PhysicsTypes.h>
 #include <Multirotor/MultirotorTypeIds.h>
-#include <mrs_msgs/msg/hw_api_attitude_cmd.hpp>
-#include <mrs_msgs/msg/hw_api_attitude_rate_cmd.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 namespace Multirotor
 {
     //! Simulates a multirotor on the entity's dynamic rigid body.
-    //! Receives attitude or attitude-rate + collective throttle commands over ROS 2 (MRS HW API messages)
+    //! Receives attitude or attitude-rate + collective throttle commands over ROS 2 (see MultirotorConfiguration)
     //! and runs the onboard controller and motor model on every physics sub-step, applying rotor forces to the body.
     //! Sensors (IMU, odometry, cameras, ...) are separate ROS 2 sensor components on the same entity or its children.
     class MultirotorComponent
@@ -46,8 +46,8 @@ namespace Multirotor
         AzPhysics::SimulatedBodyHandle m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
 
-        rclcpp::Subscription<mrs_msgs::msg::HwApiAttitudeCmd>::SharedPtr m_attitudeSubscription;
-        rclcpp::Subscription<mrs_msgs::msg::HwApiAttitudeRateCmd>::SharedPtr m_attitudeRateSubscription;
+        rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_attitudeSubscription;
+        rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_attitudeRateSubscription;
 
         AZStd::mutex m_commandMutex;
         MultirotorController::Command m_command; //!< Guarded by m_commandMutex.

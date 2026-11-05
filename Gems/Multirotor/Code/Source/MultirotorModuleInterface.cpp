@@ -4,6 +4,7 @@
 
 #include <Multirotor/MultirotorTypeIds.h>
 
+#include <Clients/FreeCameraComponent.h>
 #include <Clients/MultirotorComponent.h>
 #include <Clients/MultirotorSystemComponent.h>
 
@@ -23,6 +24,7 @@ namespace Multirotor
         m_descriptors.insert(m_descriptors.end(), {
             MultirotorSystemComponent::CreateDescriptor(),
             MultirotorComponent::CreateDescriptor(),
+            FreeCameraComponent::CreateDescriptor(),
             });
     }
 

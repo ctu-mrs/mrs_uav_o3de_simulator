@@ -12,13 +12,15 @@ namespace Multirotor
             serialize->Class<RotorConfiguration>()
                 ->Version(1)
                 ->Field("Position", &RotorConfiguration::m_position)
-                ->Field("Clockwise", &RotorConfiguration::m_clockwise);
+                ->Field("Clockwise", &RotorConfiguration::m_clockwise)
+                ->Field("Visual", &RotorConfiguration::m_visual);
 
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {
                 ec->Class<RotorConfiguration>("Rotor", "A single rotor")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &RotorConfiguration::m_position, "Position", "Hub position in the body frame [m]")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &RotorConfiguration::m_clockwise, "Clockwise", "Spin direction viewed from above");
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &RotorConfiguration::m_clockwise, "Clockwise", "Spin direction viewed from above")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &RotorConfiguration::m_visual, "Visual", "Child entity to spin, with its origin at the hub");
             }
         }
     }
@@ -32,7 +34,8 @@ namespace Multirotor
                 ->Field("ThrustCoefficient", &MotorConfiguration::m_thrustCoefficient)
                 ->Field("TorqueCoefficient", &MotorConfiguration::m_torqueCoefficient)
                 ->Field("MaxRotorSpeed", &MotorConfiguration::m_maxRotorSpeed)
-                ->Field("TimeConstant", &MotorConfiguration::m_timeConstant);
+                ->Field("TimeConstant", &MotorConfiguration::m_timeConstant)
+                ->Field("VisualSlowdown", &MotorConfiguration::m_visualSlowdown);
 
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {
@@ -44,7 +47,9 @@ namespace Multirotor
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MotorConfiguration::m_maxRotorSpeed, "Max rotor speed", "Rotor speed at full throttle [rad/s]")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &MotorConfiguration::m_timeConstant, "Time constant", "First-order motor lag [s]")
-                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f);
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &MotorConfiguration::m_visualSlowdown, "Visual slowdown", "Rotor visuals spin this many times slower")
+                    ->Attribute(AZ::Edit::Attributes::Min, 1.0f);
             }
         }
     }

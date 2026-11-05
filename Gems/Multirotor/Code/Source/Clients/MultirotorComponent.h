@@ -34,14 +34,16 @@ namespace Multirotor
         void Deactivate() override;
 
     private:
-        // AZ::TickBus::Handler, used once to find the rigid body after physics has created it.
+        // AZ::TickBus::Handler. Finds the rigid body after physics has created it, then spins the rotor visuals.
         void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
 
         void OnSceneSimulationStart(AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime);
         void SetCommand(const MultirotorController::Command& command);
+        void SpinRotorVisuals(float deltaTime);
 
         MultirotorConfiguration m_config;
         MultirotorController m_controller;
+        AZStd::vector<float> m_rotorAngles; //!< Of the rotor visuals [rad].
 
         AzPhysics::SimulatedBodyHandle m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;

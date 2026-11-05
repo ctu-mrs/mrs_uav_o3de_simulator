@@ -9,6 +9,7 @@ namespace Multirotor
 
     // Component TypeIds
     inline constexpr const char* MultirotorComponentTypeId = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51}";
+    inline constexpr const char* FreeCameraComponentTypeId = "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92}";
 
     // Module derived classes TypeIds
     inline constexpr const char* MultirotorModuleInterfaceTypeId = "{BCC94CE4-5401-4DC0-8838-5AA40FE4DACF}";

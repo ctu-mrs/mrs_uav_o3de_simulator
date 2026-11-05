@@ -26,7 +26,8 @@
             "EditorEntitySortComponent": {
                 "$type": "EditorEntitySortComponent",
                 "Child Entity Order": [
-                    "Entity_[933407460906]"
+                    "Entity_[933407460906]",
+                    "Entity_[109299002150]"
                 ],
                 "Id": 6161994726711464193
             },
@@ -334,7 +335,8 @@
                                         -0.1812,
                                         0.057
                                     ],
-                                    "Clockwise": false
+                                    "Clockwise": false,
+                                    "Visual": "Entity_[83716650117]"
                                 },
                                 {
                                     "Position": [
@@ -342,7 +344,8 @@
                                         0.1812,
                                         0.057
                                     ],
-                                    "Clockwise": false
+                                    "Clockwise": false,
+                                    "Visual": "Entity_[481570606521]"
                                 },
                                 {
                                     "Position": [
@@ -350,7 +353,8 @@
                                         0.1812,
                                         0.057
                                     ],
-                                    "Clockwise": true
+                                    "Clockwise": true,
+                                    "Visual": "Entity_[986114408031]"
                                 },
                                 {
                                     "Position": [
@@ -358,7 +362,8 @@
                                         -0.1812,
                                         0.057
                                     ],
-                                    "Clockwise": true
+                                    "Clockwise": true,
+                                    "Visual": "Entity_[554396171286]"
                                 }
                             ]
                         }
@@ -442,6 +447,67 @@
                         }
                     },
                     "Id": 399205932804073292
+                }
+            }
+        },
+        "Entity_[109299002150]": {
+            "Id": "Entity_[109299002150]",
+            "Name": "free_camera",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "ContainerEntity",
+                    "Id": 1339465696636064551
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 7344317943309887432
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 3376518119084591075
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Id": 258293865084963795
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 6659982609204946035
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 1710104098203368800
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 520045263316167504
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 1935338807206672707
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 7565426671770249146
+                },
+                "EditorCameraComponent": {
+                    "$type": "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent",
+                    "Controller": {
+                        "Configuration": {
+                            "Field of View": 60.0,
+                            "MakeActiveViewOnActivation": false
+                        }
+                    },
+                    "Id": 5746308261896369982
+                },
+                "FreeCameraComponent": {
+                    "$type": "GenericComponentWrapper",
+                    "m_template": {
+                        "$type": "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92} FreeCameraComponent",
+                        "FollowCamera": "Entity_[977834167792]"
+                    },
+                    "Id": 7144316439346118131
                 }
             }
         },

@@ -1,5 +1,7 @@
 #include "MultirotorComponent.h"
 
+#include <AzCore/Component/TransformBus.h>
+#include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzFramework/Physics/PhysicsScene.h>
@@ -99,8 +101,14 @@ namespace Multirotor
         m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
     }
 
-    void MultirotorComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
+    void MultirotorComponent::OnTick(float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
     {
+        if (m_bodyHandle != AzPhysics::InvalidSimulatedBodyHandle)
+        {
+            SpinRotorVisuals(deltaTime);
+            return;
+        }
+
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
         if (!sceneInterface)
         {
@@ -114,7 +122,6 @@ namespace Multirotor
         {
             return;
         }
-        AZ::TickBus::Handler::BusDisconnect();
 
         const AZ::Matrix3x3 inertia = rigidBody->GetInertiaLocal();
         const AZ::Vector3 inertiaDiagonal(inertia.GetElement(0, 0), inertia.GetElement(1, 1), inertia.GetElement(2, 2));
@@ -126,9 +133,11 @@ namespace Multirotor
                 "Entity %s: the rotor layout cannot control thrust, roll, pitch, and yaw independently. "
                 "At least 4 rotors with non-degenerate positions and a positive thrust coefficient are required.",
                 GetEntity()->GetName().c_str());
+            AZ::TickBus::Handler::BusDisconnect();
             return;
         }
 
+        m_rotorAngles.assign(m_config.m_rotors.size(), 0.0f);
         m_bodyHandle = rigidBody->m_bodyHandle;
         m_sceneSimulationStartHandler = AzPhysics::SceneEvents::OnSceneSimulationStartHandler(
             [this](AzPhysics::SceneHandle handle, float fixedDeltaTime)
@@ -137,6 +146,25 @@ namespace Multirotor
             },
             aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Components));
         sceneInterface->RegisterSceneSimulationStartHandler(sceneHandle, m_sceneSimulationStartHandler);
+    }
+
+    void MultirotorComponent::SpinRotorVisuals(float deltaTime)
+    {
+        const auto& speeds = m_controller.GetRotorSpeeds();
+        for (size_t i = 0; i < speeds.size(); ++i)
+        {
+            const RotorConfiguration& rotor = m_config.m_rotors[i];
+            if (!rotor.m_visual.IsValid())
+            {
+                continue;
+            }
+
+            // A clockwise rotor, viewed from above, spins about -Z.
+            const float direction = rotor.m_clockwise ? -1.0f : 1.0f;
+            m_rotorAngles[i] = AZStd::fmod(m_rotorAngles[i] + direction * speeds[i] / m_config.m_motor.m_visualSlowdown * deltaTime, AZ::Constants::TwoPi);
+            AZ::TransformBus::Event(
+                rotor.m_visual, &AZ::TransformInterface::SetLocalRotationQuaternion, AZ::Quaternion::CreateRotationZ(m_rotorAngles[i]));
+        }
     }
 
     void MultirotorComponent::SetCommand(const MultirotorController::Command& command)

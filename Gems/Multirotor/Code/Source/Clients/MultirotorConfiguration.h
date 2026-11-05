@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AzCore/Component/EntityId.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/RTTI/RTTI.h>
 #include <AzCore/std/containers/vector.h>
@@ -27,6 +28,7 @@ namespace Multirotor
 
         AZ::Vector3 m_position = AZ::Vector3::CreateZero(); //!< Rotor hub position [m].
         bool m_clockwise = false; //!< Spin direction viewed from above. Determines the sign of the yaw reaction torque.
+        AZ::EntityId m_visual; //!< Optional child entity spun about its Z axis, with its origin at the hub.
     };
 
     //! Motor/propeller model shared by all rotors.
@@ -39,6 +41,7 @@ namespace Multirotor
         float m_torqueCoefficient = 3.1e-7f; //!< k_m: reaction torque = k_m * omega^2 [Nm/(rad/s)^2].
         float m_maxRotorSpeed = 1000.0f; //!< omega at throttle 1.0 [rad/s].
         float m_timeConstant = 0.03f; //!< First-order motor lag [s].
+        float m_visualSlowdown = 12.0f; //!< Rotor visuals spin this many times slower, or they alias at the frame rate.
     };
 
     //! Onboard attitude and attitude-rate controller gains.

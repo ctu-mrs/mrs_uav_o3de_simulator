@@ -64,6 +64,7 @@ ROTORS = [(1, -1, False), (-1, 1, False), (1, 1, True), (-1, -1, True)]
 CAMERA_TYPE = "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent"
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
+FREE_CAMERA_TYPE = "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92} FreeCameraComponent"
 EDITOR_COMPONENTS = [
     "EditorDisabledCompositionComponent",
     "EditorEntityIconComponent",
@@ -177,10 +178,11 @@ def make_drone_prefab():
     visual = entity_key("visual")
     camera = entity_key("camera")
     follow_camera = entity_key("follow_camera")
+    free_camera = entity_key("free_camera")
     props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
     rotors = [
-        {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise}
-        for x_sign, y_sign, clockwise in ROTORS
+        {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise, "Visual": prop}
+        for (x_sign, y_sign, clockwise), prop in zip(ROTORS, props)
     ]
     i_xx, i_yy, i_zz = INERTIA_DIAGONAL
     sensor_config = {"Frequency (HZ)": SENSOR_RATE}
@@ -212,6 +214,19 @@ def make_drone_prefab():
             children=[visual, camera, follow_camera, *props],
         ),
         visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
+        # Not a child of the drone, so that it stays where it is left.
+        free_camera: make_entity(
+            free_camera,
+            "free_camera",
+            "ContainerEntity",
+            [
+                {
+                    "$type": CAMERA_TYPE,
+                    "Controller": {"Configuration": {"Field of View": 60.0, "MakeActiveViewOnActivation": False}},
+                },
+                wrapped(FREE_CAMERA_TYPE, FollowCamera=follow_camera),
+            ],
+        ),
         camera: make_entity(
             camera,
             "camera",
@@ -239,7 +254,7 @@ def make_drone_prefab():
             "Multirotor",
             "",
             [{"$type": "EditorPrefabComponent"}],
-            children=[drone],
+            children=[drone, free_camera],
             position=[0.0, 0.0, 0.0],  # Written out so the level can patch it.
         ),
         "Entities": entities,

@@ -32,16 +32,22 @@ Tools/run_editor.sh --manager    # Project Manager
 
 Without ROS 2 sourced, the ROS and Multirotor Gems fail to load, without an error that stops anything. The Asset Processor then compiles prefabs without their components, and saving in the Editor removes the components from the prefabs for good. If the drone has no topics, delete the `.spawnable` files under `Cache/linux` and run `AssetProcessorBatch` with ROS 2 sourced.
 
-To run the game, process the assets once by opening the Editor or running `AssetProcessorBatch`, then run the launcher. Set `RMW_IMPLEMENTATION` to match your other ROS nodes. With `rmw_zenoh_cpp`, also start a router with `ros2 run rmw_zenoh_cpp rmw_zenohd`.
+To run the game, process the assets once by opening the Editor or running `AssetProcessorBatch`, then:
 
 ```sh
-source /opt/ros/jazzy/setup.zsh
-cd build/linux/bin/profile
-./DroneSim.GameLauncher --project-path=$HOME/git/o3de_drone_sim --bg_ConnectToAssetProcessor=0 \
-  --t_simulationTickDeltaOverride=17000 --r_renderScale=0.5
+Tools/run_game.sh                # the default level
+Tools/run_game.sh flatworld      # another level
+Tools/run_game.sh --list         # the compiled levels
+Tools/run_game.sh --headless     # without rendering, so without the camera
 ```
 
-`--t_simulationTickDeltaOverride=17000` advances the simulation 17 ms per rendered frame, in microseconds. Slow frames then slow the simulation down, instead of looking like data dropouts to ROS. Without it, flying at low frame rates is unstable. All ROS nodes need `use_sim_time:=true`. `--r_renderScale` lowers the game view's resolution, not the camera's. Use `--rhi=null` to run without rendering, and so without the camera.
+Other arguments go to the launcher. Set `RMW_IMPLEMENTATION` to match your other ROS nodes; the default is `rmw_fastrtps_cpp`. With `rmw_zenoh_cpp`, also start a router with `ros2 run rmw_zenoh_cpp rmw_zenohd`.
+
+The script passes these flags:
+
+- `--t_simulationTickDeltaOverride=17000` advances the simulation 17 ms per rendered frame, in microseconds. Slow frames then slow the simulation down, instead of looking like data dropouts to ROS. Without it, flying at low frame rates is unstable. All ROS nodes need `use_sim_time:=true`.
+- `--r_renderScale=0.5` lowers the game view's resolution, not the camera's.
+- `--rhi=null`, with `--headless`, runs without rendering.
 
 In the game, press **C** to switch between following the drone and a free camera: WASD to move, Q and E for down and up, the right mouse button to look around, and left shift to go faster. In the free camera, **T** keeps the view aimed at the drone while you move. **H** hides the guide in the game view. **V** stops rendering the game view while the drone's camera keeps running, and `--drone_viewport=false` starts that way. It raised the frame rate by 5 to 20%, less than `--r_renderScale=0.5` does, and adds nothing on top of it.
 
@@ -67,7 +73,7 @@ Rates are in sim time, on `/clock`. Commands must keep streaming: the throttle i
 - `DemoLevel`, the default, is a warehouse.
 - `FlatWorld` is a template: a flat 2 x 2 km ground, a sky, a sun, and the drone. It renders the fastest, which is about 1.1 times real time on an integrated GPU.
 
-To load another level, pass it to the game in lowercase, as in `--loadlevel=levels/flatworld/flatworld.spawnable`. To change the default, edit `Registry/loadlevel.setreg` and run the Asset Processor, because the game reads a compiled copy of the file.
+To load another level, pass its name to `Tools/run_game.sh`. To change the default, edit `Registry/loadlevel.setreg` and run the Asset Processor, because the game reads a compiled copy of the file.
 
 ### Creating your own level
 

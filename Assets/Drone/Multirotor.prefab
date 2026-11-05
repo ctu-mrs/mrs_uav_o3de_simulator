@@ -161,7 +161,7 @@
                         "Height": 720
                     },
                     "SensorConfig": {
-                        "Frequency (HZ)": 60.0,
+                        "Frequency (HZ)": 30.0,
                         "Publishers": {
                             "Color Camera Info": {
                                 "Type": "sensor_msgs::msg::CameraInfo",

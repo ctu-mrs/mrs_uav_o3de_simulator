@@ -41,7 +41,7 @@ CAMERA_CONFIG = {
     "ClipNear": 0.02,
     "ClipFar": 5000.0,  # Large worlds, such as a splat with its surroundings.
 }
-CAMERA_RATE = 30.0  # [Hz]
+CAMERA_RATE = 60.0  # [Hz], in sim time; this renders the camera on every frame of the 17 ms simulation step.
 
 # Livox Mid-360, as in sdf/components/lidar/livox/livox.sdf.jinja. Its real scan pattern is non-repetitive,
 # this is a regular grid. The physics lidar backend has no noise, and the rays pass above the prop colliders.

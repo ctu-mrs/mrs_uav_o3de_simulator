@@ -159,7 +159,7 @@
                         "ClipFar": 5000.0
                     },
                     "SensorConfig": {
-                        "Frequency (HZ)": 30.0,
+                        "Frequency (HZ)": 60.0,
                         "Publishers": {
                             "Color Camera Info": {
                                 "Type": "sensor_msgs::msg::CameraInfo",

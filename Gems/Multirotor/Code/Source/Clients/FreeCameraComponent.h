@@ -12,7 +12,8 @@ namespace Multirotor
     //! Switches the game view between a follow camera and the camera on this entity.
     //! C toggles the view, which starts from the follow camera's pose. WASD moves, Q and E go down and up,
     //! the right mouse button looks around, and left shift moves faster. T keeps the view aimed at the drone
-    //! while it still moves, and H toggles the guide drawn in the game view.
+    //! while it still moves, H toggles the guide drawn in the game view, and V stops rendering the game view, which
+    //! leaves sensor cameras running in their own render pipelines. The drone_viewport console variable sets the start.
     class FreeCameraComponent
         : public AZ::Component
         , private AZ::TickBus::Handler
@@ -39,6 +40,7 @@ namespace Multirotor
 
         void ToggleView();
         void DrawGuide();
+        void ApplyViewport();
 
         AZ::EntityId m_followCamera;
         AZ::EntityId m_trackTarget;
@@ -49,6 +51,8 @@ namespace Multirotor
         bool m_active = false;
         bool m_tracking = false;
         bool m_showGuide = true;
+        bool m_viewportEnabled = true; //!< Whether the game view should render.
+        bool m_viewportApplied = true; //!< Whether the game view renders.
         bool m_looking = false;
         bool m_fast = false;
         AZ::Vector3 m_moveInput = AZ::Vector3::CreateZero(); //!< Right, forward, up, each in [-1, 1].

@@ -1,6 +1,9 @@
 #include "FreeCameraComponent.h"
 
+#include <Atom/RPI.Public/RenderPipeline.h>
+#include <Atom/RPI.Public/Scene.h>
 #include <AzCore/Component/TransformBus.h>
+#include <AzCore/Console/IConsole.h>
 #include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
@@ -10,6 +13,8 @@
 #include <AzFramework/Input/Channels/InputChannel.h>
 #include <AzFramework/Input/Devices/Keyboard/InputDeviceKeyboard.h>
 #include <AzFramework/Input/Devices/Mouse/InputDeviceMouse.h>
+
+AZ_CVAR(bool, drone_viewport, true, nullptr, AZ::ConsoleFunctorFlags::Null, "Whether the game view renders at startup");
 
 namespace Multirotor
 {
@@ -71,14 +76,43 @@ namespace Multirotor
 
     void FreeCameraComponent::Activate()
     {
+        m_viewportEnabled = drone_viewport;
+        m_viewportApplied = true;
         AZ::TickBus::Handler::BusConnect();
         AzFramework::InputChannelEventListener::Connect();
     }
 
     void FreeCameraComponent::Deactivate()
     {
+        m_viewportEnabled = true;
+        ApplyViewport();
         AzFramework::InputChannelEventListener::Disconnect();
         AZ::TickBus::Handler::BusDisconnect();
+    }
+
+    void FreeCameraComponent::ApplyViewport()
+    {
+        if (m_viewportApplied == m_viewportEnabled)
+        {
+            return;
+        }
+
+        AZ::RPI::Scene* scene = AZ::RPI::Scene::GetSceneForEntityId(GetEntityId());
+        AZ::RPI::RenderPipelinePtr pipeline = scene ? scene->GetDefaultRenderPipeline() : nullptr;
+        if (!pipeline)
+        {
+            return; // not created yet
+        }
+
+        if (m_viewportEnabled)
+        {
+            pipeline->AddToRenderTick();
+        }
+        else
+        {
+            pipeline->RemoveFromRenderTick();
+        }
+        m_viewportApplied = m_viewportEnabled;
     }
 
     void FreeCameraComponent::LookAt(const AZ::Vector3& from, const AZ::Vector3& to, float& yaw, float& pitch)
@@ -127,6 +161,12 @@ namespace Multirotor
         if (channel == Key::AlphanumericT && inputChannel.IsStateBegan())
         {
             m_tracking = m_active && !m_tracking && m_trackTarget.IsValid();
+            return false;
+        }
+
+        if (channel == Key::AlphanumericV && inputChannel.IsStateBegan())
+        {
+            m_viewportEnabled = !m_viewportEnabled;
             return false;
         }
 
@@ -186,7 +226,7 @@ namespace Multirotor
             return;
         }
 
-        const char* lines[3] = { "Follow camera   |   C: free camera   H: hide help", nullptr, nullptr };
+        const char* lines[3] = { "Follow camera   |   C: free camera   V: stop rendering this view   H: hide help", nullptr, nullptr };
         if (m_active)
         {
             lines[0] = m_tracking ? "Tracking the drone   |   T: stop tracking   C: follow camera   H: hide help"
@@ -209,6 +249,7 @@ namespace Multirotor
 
     void FreeCameraComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
     {
+        ApplyViewport();
         DrawGuide();
 
         if (!m_active)

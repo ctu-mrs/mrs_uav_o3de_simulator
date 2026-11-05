@@ -51,6 +51,7 @@ ly_add_target(
             AZ::AzCore
             AZ::AzFramework
             Gem::ROS2.Static
+            Gem::Atom_RPI.Public
 )
 
 target_depends_on_ros2_packages(${gem_name}.Private.Object rclcpp geometry_msgs sensor_msgs)

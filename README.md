@@ -43,7 +43,7 @@ cd build/linux/bin/profile
 
 `--t_simulationTickDeltaOverride=17000` advances the simulation 17 ms per rendered frame, in microseconds. Slow frames then slow the simulation down, instead of looking like data dropouts to ROS. Without it, flying at low frame rates is unstable. All ROS nodes need `use_sim_time:=true`. `--r_renderScale` lowers the game view's resolution, not the camera's. Use `--rhi=null` to run without rendering, and so without the camera.
 
-In the game, press **C** to switch between following the drone and a free camera: WASD to move, Q and E for down and up, the right mouse button to look around, and left shift to go faster. In the free camera, **T** keeps the view aimed at the drone while you move. **H** hides the guide in the game view.
+In the game, press **C** to switch between following the drone and a free camera: WASD to move, Q and E for down and up, the right mouse button to look around, and left shift to go faster. In the free camera, **T** keeps the view aimed at the drone while you move. **H** hides the guide in the game view. **V** stops rendering the game view while the drone's camera keeps running, and `--drone_viewport=false` starts that way. It raised the frame rate by 5 to 20%, less than `--r_renderScale=0.5` does, and adds nothing on top of it.
 
 ## ROS 2 interface
 

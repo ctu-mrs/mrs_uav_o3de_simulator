@@ -17,8 +17,8 @@
     "icon_path": "preview.png",
     "engine": "o3de-sdk",
     "external_subdirectories": [
-        "Gem",
-        "Gems/Multirotor"
+        "Gems/Multirotor",
+        "Gem"
     ],
     "restricted": "DroneSim",
     "gem_names": [
@@ -28,15 +28,18 @@
         "Compression",
         "DebugDraw",
         "DiffuseProbeGrid",
-        "EditorPythonBindings",
+        "DroneSim",
         "EMotionFX",
+        "EditorPythonBindings",
         "GameState",
         "ImGui",
         "LandscapeCanvas",
         "LyShine",
+        "ModelForgeSplat==0.11.0",
+        "Multirotor",
         "PhysX5",
-        "PrimitiveAssets",
         "PrefabBuilder",
+        "PrimitiveAssets",
         "ROS2>=3.1.0",
         "ROS2Controllers",
         "ROS2SampleRobots",
@@ -46,10 +49,8 @@
         "ScriptEvents",
         "StartingPointInput",
         "TextureAtlas",
-        "WhiteBox",
         "WarehouseAssets",
-        "Multirotor",
-        "DroneSim"
+        "WhiteBox"
     ],
     "engine_version": "2.6.0"
 }

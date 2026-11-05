@@ -10,7 +10,7 @@ Design decision: dynamics run entirely inside O3DE (PhysX rigid body). The fast 
 
 ## Build and test
 
-ROS 2 must also be sourced before starting the Editor or Asset Processor. Otherwise the asset builders cannot load the ROS and Multirotor Gems and silently compile prefabs without those components while reporting success; the drone then has no topics. To recover, delete the affected `.spawnable` files under `Cache/linux` and run `AssetProcessorBatch` with ROS sourced.
+ROS 2 must also be sourced before starting the Editor, Project Manager, or Asset Processor, so start them with `Tools/run_editor.sh` (`--manager` for Project Manager). Otherwise the asset builders cannot load the ROS and Multirotor Gems and silently compile prefabs without those components while reporting success, and saving in the Editor removes the components from the prefabs for good; the drone then has no topics. To recover, delete the affected `.spawnable` files under `Cache/linux` and run `AssetProcessorBatch` with ROS sourced.
 
 ROS 2 must be sourced for every configure and build (the `ROS2Controllers` Gem requires `control_msgs` and `ackermann_msgs`):
 

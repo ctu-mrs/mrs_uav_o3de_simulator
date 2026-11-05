@@ -296,7 +296,7 @@ def make_drone_prefab():
                     "$type": CAMERA_TYPE,
                     "Controller": {"Configuration": {"Field of View": 60.0, "MakeActiveViewOnActivation": False}},
                 },
-                wrapped(FREE_CAMERA_TYPE, FollowCamera=follow_camera),
+                wrapped(FREE_CAMERA_TYPE, FollowCamera=follow_camera, TrackTarget=drone),
             ],
         ),
         camera: make_entity(

@@ -1,5 +1,6 @@
 #include <AzTest/AzTest.h>
 
+#include <Clients/FreeCameraComponent.h>
 #include <Clients/MultirotorController.h>
 
 namespace UnitTest
@@ -114,6 +115,35 @@ namespace UnitTest
         // Deserialization appends to the vector, so presetting it here multiplies rotors and thrust.
         EXPECT_TRUE(MultirotorConfiguration().m_rotors.empty());
         EXPECT_EQ(MultirotorConfiguration::DefaultRotors().size(), 4);
+    }
+
+    TEST(FreeCamera, LookAtFacesTheTarget)
+    {
+        using Multirotor::FreeCameraComponent;
+        float yaw = 0.0f;
+        float pitch = 0.0f;
+
+        // Y ahead needs no rotation.
+        FreeCameraComponent::LookAt(AZ::Vector3(1.0f, 1.0f, 1.0f), AZ::Vector3(1.0f, 5.0f, 1.0f), yaw, pitch);
+        EXPECT_NEAR(yaw, 0.0f, 1e-5f);
+        EXPECT_NEAR(pitch, 0.0f, 1e-5f);
+
+        // +X is to the right, a negative rotation about Z.
+        FreeCameraComponent::LookAt(AZ::Vector3::CreateZero(), AZ::Vector3(3.0f, 0.0f, 0.0f), yaw, pitch);
+        EXPECT_NEAR(yaw, -AZ::Constants::HalfPi, 1e-5f);
+
+        // Aiming along the result reaches the target, also above it.
+        const AZ::Vector3 from(1.0f, -2.0f, 0.5f);
+        const AZ::Vector3 to(4.0f, 2.0f, 3.0f);
+        FreeCameraComponent::LookAt(from, to, yaw, pitch);
+        const AZ::Quaternion rotation = AZ::Quaternion::CreateRotationZ(yaw) * AZ::Quaternion::CreateRotationX(pitch);
+        const AZ::Vector3 forward = rotation.TransformVector(AZ::Vector3::CreateAxisY());
+        EXPECT_TRUE(forward.IsClose((to - from).GetNormalized(), 1e-5f));
+
+        // No direction keeps the current aim.
+        yaw = 0.3f;
+        FreeCameraComponent::LookAt(from, from, yaw, pitch);
+        EXPECT_FLOAT_EQ(yaw, 0.3f);
     }
 
     TEST(MultirotorControllerConfigure, RejectsTooFewRotors)

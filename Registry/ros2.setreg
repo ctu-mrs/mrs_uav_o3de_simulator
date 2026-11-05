@@ -13,7 +13,7 @@
             "SteadyClock" : true,
             "Camera":
             {
-                "AllowPipelineModification": false
+                "AllowPipelineModification": true
             }
         }
     }

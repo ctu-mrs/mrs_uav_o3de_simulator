@@ -182,7 +182,10 @@
                 },
                 "ROS2FrameEditorComponent": {
                     "$type": "ROS2FrameEditorComponent",
-                    "Id": 5298418622856817686
+                    "Id": 5298418622856817686,
+                    "ROS2FrameConfiguration": {
+                        "Frame Name": "camera"
+                    }
                 },
                 "TransformComponent": {
                     "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
@@ -866,7 +869,11 @@
                 },
                 "ROS2FrameEditorComponent": {
                     "$type": "ROS2FrameEditorComponent",
-                    "Id": 8733166131757370886
+                    "Id": 8733166131757370886,
+                    "ROS2FrameConfiguration": {
+                        "Frame Name": "fcu",
+                        "Publish Transform": false
+                    }
                 },
                 "ROS2ImuSensorComponent": {
                     "$type": "GenericComponentWrapper",
@@ -1154,7 +1161,10 @@
                 },
                 "ROS2FrameEditorComponent": {
                     "$type": "ROS2FrameEditorComponent",
-                    "Id": 5106447512287912788
+                    "Id": 5106447512287912788,
+                    "ROS2FrameConfiguration": {
+                        "Frame Name": "lidar"
+                    }
                 },
                 "ROS2LidarSensorComponent": {
                     "$type": "GenericComponentWrapper",

@@ -163,6 +163,14 @@ def camera_sensor():
     }
 
 
+def ros2_frame(name, publish=True):
+    """A named TF frame; the frames below the drone's publish static transforms to it."""
+    configuration = {"Frame Name": name}
+    if not publish:
+        configuration["Publish Transform"] = False
+    return {"$type": "ROS2FrameEditorComponent", "ROS2FrameConfiguration": configuration}
+
+
 def lidar_sensor():
     return wrapped(
         "ROS2LidarSensorComponent",
@@ -194,7 +202,7 @@ def lidar_entities(drone):
             lidar,
             "lidar",
             lidar_mesh,
-            [{"$type": "ROS2FrameEditorComponent"}, lidar_sensor()],
+            [ros2_frame("lidar"), lidar_sensor()],
             position=[0.0, 0.0, LIDAR_OPTICAL_Z],
         ),
     }
@@ -261,7 +269,8 @@ def make_drone_prefab():
                     },
                 },
                 *drone_colliders(),
-                {"$type": "ROS2FrameEditorComponent"},
+                # The MRS UAV System gives fcu its parent, a frame cannot have two.
+                ros2_frame("fcu", publish=False),
                 wrapped(MULTIROTOR_TYPE, Config={"Rotors": rotors}),
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
                 wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
@@ -287,7 +296,7 @@ def make_drone_prefab():
             camera,
             "camera",
             drone,
-            [{"$type": "ROS2FrameEditorComponent"}, camera_sensor()],
+            [ros2_frame("camera"), camera_sensor()],
             position=CAMERA_POSITION,
             rotation=CAMERA_ROTATION,
         ),

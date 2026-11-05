@@ -21,6 +21,9 @@ namespace Multirotor
         //! A contact is on the ground if its normal is within 45 deg of vertical. The sign of the normal is not used.
         constexpr float MinGroundContactNormalZ = 0.7071f;
 
+        //! The UAV is released this far above the ground [m], so that uneven ground does not end up inside its colliders.
+        constexpr float ReleaseClearance = 0.05f;
+
         auto ShapePair(const AzPhysics::CollisionEvent& event)
         {
             const Physics::Shape* first = event.m_shape1;
@@ -201,9 +204,14 @@ namespace Multirotor
 
         m_groundWaitTime += AZ::TimeUsToSeconds(AZ::GetRealTickDeltaTimeUs());
         const AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(m_sceneHandle, &request);
+        float descent = 0.0f;
         if (hits)
         {
-            AZ_Printf("Multirotor", "ground found %.2f m below after %.1f s\n", hits.m_hits[0].m_distance, m_groundWaitTime);
+            // Only downwards: a UAV placed just above the ground is closer to it than the clearance.
+            const float lowestPointBelowOrigin = body->GetPosition().GetZ() - body->GetAabb().GetMin().GetZ();
+            descent = AZ::GetMax(hits.m_hits[0].m_distance - lowestPointBelowOrigin - ReleaseClearance, 0.0f);
+            AZ_Printf(
+                "Multirotor", "ground found %.2f m below after %.1f s, moving %.2f m down\n", hits.m_hits[0].m_distance, m_groundWaitTime, descent);
         }
         else if (m_groundWaitTime < m_config.m_groundWaitTimeout)
         {
@@ -215,6 +223,12 @@ namespace Multirotor
         }
 
         body->SetKinematic(false);
+        if (descent > 0.0f)
+        {
+            AZ::Transform transform = body->GetTransform();
+            transform.SetTranslation(transform.GetTranslation() - AZ::Vector3::CreateAxisZ(descent));
+            body->SetTransform(transform);
+        }
         m_waitingForGround = false;
         Release();
     }

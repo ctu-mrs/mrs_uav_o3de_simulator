@@ -78,7 +78,7 @@ To load another level, pass its name to `Tools/run_game.sh`. To change the defau
 ### Creating your own level
 
 1. Copy the template: copy `Levels/FlatWorld` to `Levels/MyLevel`, and rename `FlatWorld.prefab` inside it to `MyLevel.prefab`. Or start from **File > New Level** in the Editor, opened with `Tools/run_editor.sh`.
-2. Build your world on it. Everything the drone should touch needs a PhysX collider, because the lidar and the rigid body only see colliders. The drone waits for ground below it, up to 120 s, and then falls.
+2. Build your world on it. Everything the drone should touch needs a PhysX collider, because the lidar and the rigid body only see colliders. The drone waits for ground below it, up to 120 s, and then moves to just above it. If it finds none, it falls.
 3. In a new level, add the drone: right-click, choose **Instantiate Prefab**, and pick `Assets/Drone/Multirotor.prefab`.
 4. Move the `Multirotor` entity to the spawn point, about 0.155 m above the ground. Do not move the `uav1` entity inside it, because the sensors and the follow camera hang off it.
 5. Press **Ctrl+G** to try it.

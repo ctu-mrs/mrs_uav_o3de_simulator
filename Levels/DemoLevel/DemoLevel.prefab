@@ -766,6 +766,11 @@
                     "op": "replace",
                     "path": "/Instances/Instance_[1711844155761]/Entities/Entity_[5417796519198]/Components/Component_[6043040033160946649]/Transform Data/Rotate/2",
                     "value": -84.8361587524414
+                },
+                {
+                    "op": "add",
+                    "path": "/Instances/Instance_[1711844155761]/Entities/Entity_[5417796519198]/Components/Component_[16056351394850261418]/Controller/Configuration/MakeActiveViewOnActivation",
+                    "value": false
                 }
             ]
         },

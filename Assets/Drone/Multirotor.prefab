@@ -79,6 +79,7 @@
                     "Child Entity Order": [
                         "Entity_[442335936546]",
                         "Entity_[133334939082]",
+                        "Entity_[977834167792]",
                         "Entity_[83716650117]",
                         "Entity_[481570606521]",
                         "Entity_[986114408031]",
@@ -526,6 +527,70 @@
                         }
                     },
                     "Id": 4484076004440991339
+                }
+            }
+        },
+        "Entity_[977834167792]": {
+            "Id": "Entity_[977834167792]",
+            "Name": "follow_camera",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "Entity_[933407460906]",
+                    "Transform Data": {
+                        "Translate": [
+                            -1.2,
+                            0.0,
+                            0.55
+                        ],
+                        "Rotate": [
+                            0.0,
+                            25.0,
+                            -90.0
+                        ]
+                    },
+                    "Id": 2436068861683412975
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 4104955793080029088
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 6728241655519520243
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Id": 3265671070797249315
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 3770070907003715669
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 5859351686709147825
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 6876321261541724869
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 3187662469123685157
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 1838775600103349763
+                },
+                "EditorCameraComponent": {
+                    "$type": "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent",
+                    "Controller": {
+                        "Configuration": {
+                            "Field of View": 60.0
+                        }
+                    },
+                    "Id": 5671174576745802303
                 }
             }
         },

@@ -43,6 +43,16 @@ CAMERA_CONFIG = {
 }
 CAMERA_RATE = 30.0  # [Hz]
 
+# The game view follows the drone. Atom cameras look along the entity's Y.
+FOLLOW_CAMERA_POSITION = [-1.2, 0.0, 0.55]  # [m], in the body frame, behind and above.
+FOLLOW_CAMERA_ROTATION = [0.0, 25.0, -90.0]  # [deg]; faces forward, tilted down at the drone.
+# The ROSbot prefab's own camera would otherwise compete for the game view.
+ROSBOT_SOURCE = "RosbotXL/ROSBotXL_Slamtec.prefab"
+ROSBOT_CAMERA = (
+    "/Instances/Instance_[1711844155761]/Entities/Entity_[5417796519198]"
+    "/Components/Component_[16056351394850261418]"
+)
+
 # Geometry of models/mrs_robots_description/sdf/drones/x500.sdf.jinja in mrs_uav_gazebo_simulation.
 INERTIA_DIAGONAL = [0.03167, 0.03167, 0.0625]  # Solid cylinder, r = 0.25 m, h = 0.05 m.
 ROTOR_XY = 0.1812  # [m]
@@ -51,6 +61,7 @@ LEG_XY = 0.13  # [m]
 # PX4 motor order, as in the SDF: (x sign, y sign, clockwise).
 ROTORS = [(1, -1, False), (-1, 1, False), (1, 1, True), (-1, -1, True)]
 
+CAMERA_TYPE = "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent"
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
 EDITOR_COMPONENTS = [
@@ -165,6 +176,7 @@ def make_drone_prefab():
     drone = entity_key(DRONE_NAME)
     visual = entity_key("visual")
     camera = entity_key("camera")
+    follow_camera = entity_key("follow_camera")
     props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
     rotors = [
         {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise}
@@ -197,7 +209,7 @@ def make_drone_prefab():
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
                 wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
             ],
-            children=[visual, camera, *props],
+            children=[visual, camera, follow_camera, *props],
         ),
         visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
         camera: make_entity(
@@ -207,6 +219,14 @@ def make_drone_prefab():
             [{"$type": "ROS2FrameEditorComponent"}, camera_sensor()],
             position=CAMERA_POSITION,
             rotation=CAMERA_ROTATION,
+        ),
+        follow_camera: make_entity(
+            follow_camera,
+            "follow_camera",
+            drone,
+            [{"$type": CAMERA_TYPE, "Controller": {"Configuration": {"Field of View": 60.0}}}],
+            position=FOLLOW_CAMERA_POSITION,
+            rotation=FOLLOW_CAMERA_ROTATION,
         ),
     }
     for i, (prop, rotor) in enumerate(zip(props, rotors)):
@@ -241,6 +261,12 @@ def add_instance_to_level():
         "Source": DRONE_SOURCE,
         "Patches": patches,
     }
+
+    rosbot = next(value for value in instances.values() if value["Source"] == ROSBOT_SOURCE)
+    path = f"{ROSBOT_CAMERA}/Controller/Configuration/MakeActiveViewOnActivation"
+    if not any(patch["path"] == path for patch in rosbot["Patches"]):
+        rosbot["Patches"].append({"op": "add", "path": path, "value": False})
+
     LEVEL_PREFAB.write_text(json.dumps(level, indent=4) + "\n")
 
 

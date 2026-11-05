@@ -22,7 +22,8 @@
     "documentation_url": "",
     "dependencies": [
         "PhysX5",
-        "ROS2>=4.0.0"
+        "ROS2>=4.0.0",
+        "ROS2Sensors"
     ],
     "repo_uri": "",
     "compatible_engines": [],

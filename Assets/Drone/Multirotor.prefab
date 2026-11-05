@@ -149,6 +149,13 @@
                     "$type": "EditorVisibilityComponent",
                     "Id": 6361163667796046906
                 },
+                "CameraResponseComponent": {
+                    "$type": "GenericComponentWrapper",
+                    "m_template": {
+                        "$type": "{5A3E9C17-6B2D-4E84-9F01-D27C8B4A1E63} CameraResponseComponent"
+                    },
+                    "Id": 1809517973730888959
+                },
                 "ROS2CameraSensorEditorComponent": {
                     "$type": "ROS2CameraSensorEditorComponent",
                     "Id": 4484076004440991339,

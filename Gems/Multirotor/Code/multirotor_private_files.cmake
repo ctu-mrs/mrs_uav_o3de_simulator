@@ -4,6 +4,10 @@ set(FILES
     Source/MultirotorModuleInterface.h
     Source/Clients/MultirotorSystemComponent.cpp
     Source/Clients/MultirotorSystemComponent.h
+    Source/Clients/CameraResponse.cpp
+    Source/Clients/CameraResponse.h
+    Source/Clients/CameraResponseComponent.cpp
+    Source/Clients/CameraResponseComponent.h
     Source/Clients/FreeCameraComponent.cpp
     Source/Clients/FreeCameraComponent.h
     Source/Clients/MultirotorComponent.cpp

@@ -18,6 +18,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = PROJECT_ROOT / "Assets" / "Drone" / "x500"
 MESHES = Path("models/mrs_robots_description/meshes/x500v2")
+SENSOR_MESHES = Path("models/mrs_robots_description/meshes/sensors")
 
 QUARTER = math.pi / 2
 HALF = math.pi
@@ -32,6 +33,7 @@ MATERIALS = {
     "grey": {"color": (0.45, 0.45, 0.45)},
     "dark_grey": {"color": (0.15, 0.15, 0.15)},
     "green": {"color": (0.1, 0.45, 0.12)},
+    "white": {"color": (0.8, 0.8, 0.8)},
 }
 
 # (mesh, material, yaw [rad], z offset [m])
@@ -46,6 +48,7 @@ BODY_PARTS = [
     ("battery_mesh_file.stl", "grey", QUARTER, 0.001),
     ("gps_mount_mesh_file.stl", "grey", QUARTER, 0.0),
     ("gps_module_mesh_file.stl", "black", QUARTER, 0.0),
+    ("lidar_mount_mesh_file.stl", "black", QUARTER, 0.0),
 ]
 for corner in range(4):
     yaw = corner * QUARTER
@@ -59,6 +62,8 @@ for corner in range(4):
         ("motor_bottom_mesh_file.stl", "grey", yaw, 0.0),
         ("motor_middle_mesh_file.stl", "black", yaw, 0.0),
     ]
+
+LIDAR_PARTS = [("livox_mid360.dae", "white", 0.0, 0.0)]
 
 PROP_PARTS = [
     ("prop_mesh_file.dae", "carbon_light", 0.0, 0.0),
@@ -97,7 +102,8 @@ def load_dae(path):
     position_id = vertices.find("c:input[@semantic='POSITION']", ns).get("source").lstrip("#")
 
     node = next(n for n in root.iter(f"{{{ns['c']}}}node") if n.find("c:instance_geometry", ns) is not None)
-    m = floats(node.find("c:matrix", ns))
+    matrix = node.find("c:matrix", ns)
+    m = floats(matrix) if matrix is not None else [1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 1.0]
 
     def to_scene(p, w):
         return tuple(m[r] * p[0] + m[r + 1] * p[1] + m[r + 2] * p[2] + m[r + 3] * w for r in (0, 4, 8))
@@ -108,12 +114,12 @@ def load_dae(path):
         stride = max(int(i.get("offset")) for i in inputs.values()) + 1
         indices = [int(value) for value in primitive.find("c:p", ns).text.split()]
         normals = sources[inputs["NORMAL"].get("source").lstrip("#")]
-        uvs = sources[inputs["TEXCOORD"].get("source").lstrip("#")]
+        uvs = sources[inputs["TEXCOORD"].get("source").lstrip("#")] if "TEXCOORD" in inputs else None
         corners = []
         for i in range(0, len(indices), stride):
             p = sources[position_id][indices[i + int(inputs["VERTEX"].get("offset"))]]
             n = normals[indices[i + int(inputs["NORMAL"].get("offset"))]]
-            uv = uvs[indices[i + int(inputs["TEXCOORD"].get("offset"))]]
+            uv = uvs[indices[i + int(inputs["TEXCOORD"].get("offset"))]] if uvs else (0.0, 0.0)
             corners.append((to_scene(p, 1.0), to_scene(n, 0.0), tuple(uv[:2])))
         triangles += [corners[i : i + 3] for i in range(0, len(corners), 3)]
     return triangles
@@ -176,6 +182,7 @@ def main():
     write_model("x500_body", BODY_PARTS, source)
     write_model("x500_prop_ccw", PROP_PARTS, source)
     write_model("x500_prop_cw", PROP_PARTS, source, mirror_x=True)
+    write_model("livox_mid360", LIDAR_PARTS, repo / SENSOR_MESHES)
 
 
 if __name__ == "__main__":

@@ -773,7 +773,8 @@
                         "Entity_[83716650117]",
                         "Entity_[481570606521]",
                         "Entity_[986114408031]",
-                        "Entity_[554396171286]"
+                        "Entity_[554396171286]",
+                        "Entity_[259028437507]"
                     ]
                 },
                 "EditorInspectorComponent": {
@@ -1032,6 +1033,161 @@
                             0.05700000002980232
                         ]
                     }
+                }
+            }
+        },
+        "Entity_[259028437507]": {
+            "Id": "Entity_[259028437507]",
+            "Name": "lidar_mesh",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "Entity_[933407460906]",
+                    "Transform Data": {
+                        "Translate": [
+                            0.0,
+                            0.0,
+                            0.13
+                        ]
+                    },
+                    "Id": 4126091658569281934
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 6462250236441403169
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 6398125913719530148
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Child Entity Order": [
+                        "Entity_[429825205351]"
+                    ],
+                    "Id": 5534003016732418575
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 7189526057328020913
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 1459797115543629333
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 4700264912332418610
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 8512067430704084887
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 2926509225456649958
+                },
+                "AZ_Render_EditorMeshComponent": {
+                    "$type": "AZ::Render::EditorMeshComponent",
+                    "Controller": {
+                        "Configuration": {
+                            "ModelAsset": {
+                                "assetId": {
+                                    "guid": "{08A0AEA9-CC82-5B30-83F6-81E4CD71EB7C}",
+                                    "subId": 274035830
+                                },
+                                "assetHint": "assets/drone/x500/livox_mid360.obj.azmodel"
+                            }
+                        }
+                    },
+                    "Id": 2115066684771165375
+                }
+            }
+        },
+        "Entity_[429825205351]": {
+            "Id": "Entity_[429825205351]",
+            "Name": "lidar",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "Entity_[259028437507]",
+                    "Transform Data": {
+                        "Translate": [
+                            0.0,
+                            0.0,
+                            0.037725
+                        ]
+                    },
+                    "Id": 8658534627681570304
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 1625755222010505265
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 5536520370717607025
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Id": 4633242652581563533
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 4295921687869642096
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 2548481904617459464
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 6225620158219489606
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 6039299401777113470
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 3923956148020650985
+                },
+                "ROS2FrameEditorComponent": {
+                    "$type": "ROS2FrameEditorComponent",
+                    "Id": 5106447512287912788
+                },
+                "ROS2LidarSensorComponent": {
+                    "$type": "GenericComponentWrapper",
+                    "m_template": {
+                        "$type": "ROS2LidarSensorComponent",
+                        "SensorConfiguration": {
+                            "Frequency (HZ)": 10.0,
+                            "Publishers": {
+                                "sensor_msgs::msg::PointCloud2": {
+                                    "Type": "sensor_msgs::msg::PointCloud2",
+                                    "Topic": "lidar_points"
+                                }
+                            }
+                        },
+                        "lidarCore": {
+                            "lidarConfiguration": {
+                                "lidarModelName": "CustomLidar",
+                                "lidarImplementation": "Scene Queries",
+                                "LidarParameters": {
+                                    "Name": "CustomLidar",
+                                    "Layers": 40,
+                                    "Points per layer": 720,
+                                    "Min horizontal angle": -180.0,
+                                    "Max horizontal angle": 180.0,
+                                    "Min vertical angle": -7.0,
+                                    "Max vertical angle": 52.0,
+                                    "Min range": 0.1,
+                                    "Max range": 40.0
+                                }
+                            }
+                        }
+                    },
+                    "Id": 9064087396082470592
                 }
             }
         }

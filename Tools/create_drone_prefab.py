@@ -43,6 +43,23 @@ CAMERA_CONFIG = {
 }
 CAMERA_RATE = 30.0  # [Hz]
 
+# Livox Mid-360, as in sdf/components/lidar/livox/livox.sdf.jinja. Its real scan pattern is non-repetitive,
+# this is a regular grid. The physics lidar backend has no noise, and the rays pass above the prop colliders.
+LIDAR_POSITION = [0.0, 0.0, 0.13]  # [m], in the body frame: the mesh, on the x500's lidar mount.
+LIDAR_OPTICAL_Z = 0.037725  # [m], from the mesh's origin to the optical center.
+LIDAR_RATE = 10.0  # [Hz]
+LIDAR_PARAMETERS = {
+    "Name": "CustomLidar",
+    "Layers": 40,
+    "Points per layer": 720,
+    "Min horizontal angle": -180.0,
+    "Max horizontal angle": 180.0,
+    "Min vertical angle": -7.0,
+    "Max vertical angle": 52.0,
+    "Min range": 0.1,
+    "Max range": 40.0,
+}
+
 # The game view follows the drone. Atom cameras look along the entity's Y.
 FOLLOW_CAMERA_POSITION = [-1.2, 0.0, 0.55]  # [m], in the body frame, behind and above.
 FOLLOW_CAMERA_ROTATION = [0.0, 25.0, -90.0]  # [deg]; faces forward, tilted down at the drone.
@@ -146,6 +163,43 @@ def camera_sensor():
     }
 
 
+def lidar_sensor():
+    return wrapped(
+        "ROS2LidarSensorComponent",
+        SensorConfiguration={
+            "Frequency (HZ)": LIDAR_RATE,
+            "Publishers": {
+                "sensor_msgs::msg::PointCloud2": {"Type": "sensor_msgs::msg::PointCloud2", "Topic": "lidar_points"},
+            },
+        },
+        lidarCore={
+            "lidarConfiguration": {
+                "lidarModelName": "CustomLidar",
+                "lidarImplementation": "Scene Queries",
+                "LidarParameters": LIDAR_PARAMETERS,
+            }
+        },
+    )
+
+
+def lidar_entities(drone):
+    """The sensor's mesh, and the sensor itself at the optical center."""
+    lidar_mesh = entity_key("lidar_mesh")
+    lidar = entity_key("lidar")
+    return lidar_mesh, {
+        lidar_mesh: make_entity(
+            lidar_mesh, "lidar_mesh", drone, [mesh("livox_mid360")], children=[lidar], position=LIDAR_POSITION
+        ),
+        lidar: make_entity(
+            lidar,
+            "lidar",
+            lidar_mesh,
+            [{"$type": "ROS2FrameEditorComponent"}, lidar_sensor()],
+            position=[0.0, 0.0, LIDAR_OPTICAL_Z],
+        ),
+    }
+
+
 def make_entity(entity_id, name, parent, components, children=(), position=None, rotation=None):
     transform = {"$type": TRANSFORM_TYPE, "Parent Entity": parent}
     if position is not None:
@@ -179,6 +233,7 @@ def make_drone_prefab():
     camera = entity_key("camera")
     follow_camera = entity_key("follow_camera")
     free_camera = entity_key("free_camera")
+    lidar_mesh, lidar = lidar_entities(drone)
     props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
     rotors = [
         {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise, "Visual": prop}
@@ -211,8 +266,9 @@ def make_drone_prefab():
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
                 wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
             ],
-            children=[visual, camera, follow_camera, *props],
+            children=[visual, camera, follow_camera, lidar_mesh, *props],
         ),
+        **lidar,
         visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
         # Not a child of the drone, so that it stays where it is left.
         free_camera: make_entity(

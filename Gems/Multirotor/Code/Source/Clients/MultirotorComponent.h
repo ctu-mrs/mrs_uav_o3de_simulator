@@ -40,12 +40,17 @@ namespace Multirotor
         void OnSceneSimulationStart(AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime);
         void SetCommand(const MultirotorController::Command& command);
         void SpinRotorVisuals(float deltaTime);
+        void WaitForGround();
+        void Release();
 
         MultirotorConfiguration m_config;
         MultirotorController m_controller;
         AZStd::vector<float> m_rotorAngles; //!< Of the rotor visuals [rad].
 
+        AzPhysics::SceneHandle m_sceneHandle = AzPhysics::InvalidSceneHandle;
         AzPhysics::SimulatedBodyHandle m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
+        bool m_waitingForGround = false;
+        float m_groundWaitTime = 0.0f; //!< [s, real time]
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
 
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_attitudeSubscription;

@@ -120,7 +120,8 @@ namespace Multirotor
                 ->Field("Controller", &MultirotorConfiguration::m_controller)
                 ->Field("AttitudeCmdTopic", &MultirotorConfiguration::m_attitudeCmdTopic)
                 ->Field("AttitudeRateCmdTopic", &MultirotorConfiguration::m_attitudeRateCmdTopic)
-                ->Field("CommandTimeout", &MultirotorConfiguration::m_commandTimeout);
+                ->Field("CommandTimeout", &MultirotorConfiguration::m_commandTimeout)
+                ->Field("GroundWaitTimeout", &MultirotorConfiguration::m_groundWaitTimeout);
 
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {

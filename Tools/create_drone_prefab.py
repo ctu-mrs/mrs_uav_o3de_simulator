@@ -264,23 +264,22 @@ def make_drone_prefab():
 def add_instance_to_level():
     level = json.loads(LEVEL_PREFAB.read_text())
     instances = level["Instances"]
-    for alias in [key for key, value in instances.items() if value["Source"] == DRONE_SOURCE]:
-        del instances[alias]
 
-    transform = "/ContainerEntity/Components/TransformComponent"
-    patches = [{"op": "replace", "path": f"{transform}/Parent Entity", "value": f"../{LEVEL_CONTAINER}"}]
-    for axis, value in enumerate(SPAWN_POSITION):
-        patches.append({"op": "replace", "path": f"{transform}/Transform Data/Translate/{axis}", "value": value})
+    # An existing instance keeps its place, which may have been moved in the Editor.
+    if not any(value["Source"] == DRONE_SOURCE for value in instances.values()):
+        transform = "/ContainerEntity/Components/TransformComponent"
+        patches = [{"op": "replace", "path": f"{transform}/Parent Entity", "value": f"../{LEVEL_CONTAINER}"}]
+        for axis, value in enumerate(SPAWN_POSITION):
+            patches.append({"op": "replace", "path": f"{transform}/Transform Data/Translate/{axis}", "value": value})
+        instances[f"Instance_[{stable_id('instance', DRONE_SOURCE) % 10**12}]"] = {
+            "Source": DRONE_SOURCE,
+            "Patches": patches,
+        }
 
-    instances[f"Instance_[{stable_id('instance', DRONE_SOURCE) % 10**12}]"] = {
-        "Source": DRONE_SOURCE,
-        "Patches": patches,
-    }
-
-    rosbot = next(value for value in instances.values() if value["Source"] == ROSBOT_SOURCE)
-    path = f"{ROSBOT_CAMERA}/Controller/Configuration/MakeActiveViewOnActivation"
-    if not any(patch["path"] == path for patch in rosbot["Patches"]):
-        rosbot["Patches"].append({"op": "add", "path": path, "value": False})
+    for rosbot in (value for value in instances.values() if value["Source"] == ROSBOT_SOURCE):
+        path = f"{ROSBOT_CAMERA}/Controller/Configuration/MakeActiveViewOnActivation"
+        if not any(patch["path"] == path for patch in rosbot["Patches"]):
+            rosbot["Patches"].append({"op": "add", "path": path, "value": False})
 
     LEVEL_PREFAB.write_text(json.dumps(level, indent=4) + "\n")
 

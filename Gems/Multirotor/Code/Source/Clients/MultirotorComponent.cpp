@@ -4,6 +4,8 @@
 #include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
+#include <AzCore/Time/ITime.h>
+#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
 #include <AzFramework/Physics/PhysicsScene.h>
 #include <AzFramework/Physics/RigidBodyBus.h>
 #include <AzFramework/Physics/SimulatedBodies/RigidBody.h>
@@ -99,10 +101,17 @@ namespace Multirotor
         m_attitudeSubscription.reset();
         m_attitudeRateSubscription.reset();
         m_bodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
+        m_waitingForGround = false;
     }
 
     void MultirotorComponent::OnTick(float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
     {
+        if (m_waitingForGround)
+        {
+            WaitForGround();
+            return;
+        }
+
         if (m_bodyHandle != AzPhysics::InvalidSimulatedBodyHandle)
         {
             SpinRotorVisuals(deltaTime);
@@ -139,13 +148,67 @@ namespace Multirotor
 
         m_rotorAngles.assign(m_config.m_rotors.size(), 0.0f);
         m_bodyHandle = rigidBody->m_bodyHandle;
+        m_sceneHandle = sceneHandle;
+
+        if (m_config.m_groundWaitTimeout > 0.0f)
+        {
+            rigidBody->SetKinematic(true);
+            m_groundWaitTime = 0.0f;
+            m_waitingForGround = true;
+            return;
+        }
+
+        Release();
+    }
+
+    void MultirotorComponent::WaitForGround()
+    {
+        auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+        auto* body = azdynamic_cast<AzPhysics::RigidBody*>(sceneInterface->GetSimulatedBodyFromHandle(m_sceneHandle, m_bodyHandle));
+        if (!body)
+        {
+            return;
+        }
+
+        AzPhysics::RayCastRequest request;
+        request.m_start = body->GetPosition();
+        request.m_direction = -AZ::Vector3::CreateAxisZ();
+        request.m_distance = 10000.0f;
+        request.m_filterCallback = [handle = m_bodyHandle](const AzPhysics::SimulatedBody* hitBody, [[maybe_unused]] const Physics::Shape* shape)
+        {
+            return hitBody->m_bodyHandle == handle ? AzPhysics::SceneQuery::QueryHitType::None : AzPhysics::SceneQuery::QueryHitType::Block;
+        };
+
+        m_groundWaitTime += AZ::TimeUsToSeconds(AZ::GetRealTickDeltaTimeUs());
+        const AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(m_sceneHandle, &request);
+        if (hits)
+        {
+            AZ_Printf("Multirotor", "ground found %.2f m below after %.1f s\n", hits.m_hits[0].m_distance, m_groundWaitTime);
+        }
+        else if (m_groundWaitTime < m_config.m_groundWaitTimeout)
+        {
+            return;
+        }
+        else
+        {
+            AZ_Warning("Multirotor", false, "no ground found below the UAV after %.1f s, releasing it", m_groundWaitTime);
+        }
+
+        body->SetKinematic(false);
+        m_waitingForGround = false;
+        Release();
+    }
+
+    void MultirotorComponent::Release()
+    {
+        auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
         m_sceneSimulationStartHandler = AzPhysics::SceneEvents::OnSceneSimulationStartHandler(
             [this](AzPhysics::SceneHandle handle, float fixedDeltaTime)
             {
                 OnSceneSimulationStart(handle, fixedDeltaTime);
             },
             aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Components));
-        sceneInterface->RegisterSceneSimulationStartHandler(sceneHandle, m_sceneSimulationStartHandler);
+        sceneInterface->RegisterSceneSimulationStartHandler(m_sceneHandle, m_sceneSimulationStartHandler);
     }
 
     void MultirotorComponent::SpinRotorVisuals(float deltaTime)

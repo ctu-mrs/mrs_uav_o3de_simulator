@@ -28,6 +28,8 @@ DRONE_NAME = "uav1"  # Also the ROS 2 namespace: /uav1/cmd/attitude_rate, /uav1/
 SPAWN_POSITION = [1.5, 1.5, 0.155]  # [m], in the level; the legs reach 0.1525 m below the origin.
 MASS = 2.0  # [kg]; with the default motor model this hovers at ~0.5 throttle.
 SENSOR_RATE = 250.0  # [Hz]; the rate of the MRS HW API.
+RANGEFINDER_POSITION = [0.0, 0.0, -0.05]  # [m], in the body frame.
+RANGEFINDER_ROTATION = [0.0, 90.0, 0.0]  # [deg]; the beam is the entity's X, this points it down.
 
 # Forward-facing RGB camera. ROS cameras look along the entity's Z with X right and Y down.
 CAMERA_POSITION = [0.14, 0.0, -0.02]  # [m], in the body frame, in front of the frame and below the props.
@@ -76,6 +78,7 @@ ROTORS = [(1, -1, False), (-1, 1, False), (1, 1, True), (-1, -1, True)]
 CAMERA_TYPE = "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent"
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
+RANGEFINDER_TYPE = "{7C1E4D90-2B3A-4F6E-8D15-A94C0B7E6F21} RangefinderComponent"
 FREE_CAMERA_TYPE = "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92} FreeCameraComponent"
 EDITOR_COMPONENTS = [
     "EditorDisabledCompositionComponent",
@@ -185,6 +188,18 @@ def lidar_sensor():
     )
 
 
+def rangefinder_entity(drone):
+    rangefinder = entity_key("rangefinder")
+    return rangefinder, make_entity(
+        rangefinder,
+        "rangefinder",
+        drone,
+        [ros2_frame("garmin"), wrapped(RANGEFINDER_TYPE, IgnoredEntity=drone)],
+        position=RANGEFINDER_POSITION,
+        rotation=RANGEFINDER_ROTATION,
+    )
+
+
 def lidar_entities(drone):
     """The sensor's mesh, and the sensor itself at the optical center."""
     lidar_mesh = entity_key("lidar_mesh")
@@ -243,6 +258,7 @@ def make_drone_prefab():
     follow_camera = entity_key("follow_camera")
     free_camera = entity_key("free_camera")
     lidar_mesh, lidar = lidar_entities(drone)
+    rangefinder, rangefinder_data = rangefinder_entity(drone)
     props = [entity_key(f"prop_{i}") for i in range(len(ROTORS))]
     rotors = [
         {"Position": [x_sign * ROTOR_XY, y_sign * ROTOR_XY, ROTOR_Z], "Clockwise": clockwise, "Visual": prop}
@@ -276,9 +292,10 @@ def make_drone_prefab():
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
                 wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
             ],
-            children=[visual, camera, follow_camera, lidar_mesh, *props],
+            children=[visual, camera, follow_camera, lidar_mesh, rangefinder, *props],
         ),
         **lidar,
+        rangefinder: rangefinder_data,
         visual: make_entity(visual, "visual", drone, [mesh("x500_body")]),
         # Not a child of the drone, so that it stays where it is left.
         free_camera: make_entity(

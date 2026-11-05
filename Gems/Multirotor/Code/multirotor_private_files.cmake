@@ -8,6 +8,8 @@ set(FILES
     Source/Clients/FreeCameraComponent.h
     Source/Clients/MultirotorComponent.cpp
     Source/Clients/MultirotorComponent.h
+    Source/Clients/RangefinderComponent.cpp
+    Source/Clients/RangefinderComponent.h
     Source/Clients/MultirotorConfiguration.cpp
     Source/Clients/MultirotorConfiguration.h
     Source/Clients/MultirotorController.cpp

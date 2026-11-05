@@ -6,6 +6,7 @@
 
 #include <Clients/FreeCameraComponent.h>
 #include <Clients/MultirotorComponent.h>
+#include <Clients/RangefinderComponent.h>
 #include <Clients/MultirotorSystemComponent.h>
 
 namespace Multirotor
@@ -25,6 +26,7 @@ namespace Multirotor
             MultirotorSystemComponent::CreateDescriptor(),
             MultirotorComponent::CreateDescriptor(),
             FreeCameraComponent::CreateDescriptor(),
+            RangefinderComponent::CreateDescriptor(),
             });
     }
 

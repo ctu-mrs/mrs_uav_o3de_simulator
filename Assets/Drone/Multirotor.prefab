@@ -736,7 +736,8 @@
                         "Entity_[481570606521]",
                         "Entity_[986114408031]",
                         "Entity_[554396171286]",
-                        "Entity_[259028437507]"
+                        "Entity_[259028437507]",
+                        "Entity_[109262206391]"
                     ]
                 },
                 "EditorInspectorComponent": {
@@ -1162,6 +1163,76 @@
                         }
                     },
                     "Id": 9064087396082470592
+                }
+            }
+        },
+        "Entity_[109262206391]": {
+            "Id": "Entity_[109262206391]",
+            "Name": "rangefinder",
+            "Components": {
+                "TransformComponent": {
+                    "$type": "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent",
+                    "Parent Entity": "Entity_[933407460906]",
+                    "Transform Data": {
+                        "Translate": [
+                            0.0,
+                            0.0,
+                            -0.05
+                        ],
+                        "Rotate": [
+                            0.0,
+                            90.0,
+                            0.0
+                        ]
+                    },
+                    "Id": 3287888896821983634
+                },
+                "EditorDisabledCompositionComponent": {
+                    "$type": "EditorDisabledCompositionComponent",
+                    "Id": 8307548022378751679
+                },
+                "EditorEntityIconComponent": {
+                    "$type": "EditorEntityIconComponent",
+                    "Id": 7854756511896369620
+                },
+                "EditorEntitySortComponent": {
+                    "$type": "EditorEntitySortComponent",
+                    "Id": 690109431102481391
+                },
+                "EditorInspectorComponent": {
+                    "$type": "EditorInspectorComponent",
+                    "Id": 7737182972759159109
+                },
+                "EditorLockComponent": {
+                    "$type": "EditorLockComponent",
+                    "Id": 1199692122601028216
+                },
+                "EditorOnlyEntityComponent": {
+                    "$type": "EditorOnlyEntityComponent",
+                    "Id": 9165289463129652645
+                },
+                "EditorPendingCompositionComponent": {
+                    "$type": "EditorPendingCompositionComponent",
+                    "Id": 6965133575985043333
+                },
+                "EditorVisibilityComponent": {
+                    "$type": "EditorVisibilityComponent",
+                    "Id": 3245231976030078032
+                },
+                "ROS2FrameEditorComponent": {
+                    "$type": "ROS2FrameEditorComponent",
+                    "ROS2FrameConfiguration": {
+                        "Frame Name": "garmin"
+                    },
+                    "Id": 7389280328880698167
+                },
+                "RangefinderComponent": {
+                    "$type": "GenericComponentWrapper",
+                    "m_template": {
+                        "$type": "{7C1E4D90-2B3A-4F6E-8D15-A94C0B7E6F21} RangefinderComponent",
+                        "IgnoredEntity": "Entity_[933407460906]"
+                    },
+                    "Id": 5967791956276579468
                 }
             }
         }

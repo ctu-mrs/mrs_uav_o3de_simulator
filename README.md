@@ -56,9 +56,10 @@ Topics are under the drone's namespace, `/uav1`.
 | `odom` | `nav_msgs/Odometry` | 250 Hz, relative to the spawn point, twist in the body frame |
 | `imu` | `sensor_msgs/Imu` | 250 Hz |
 | `camera_image_color`, `color_camera_info` | `sensor_msgs/Image`, `CameraInfo` | 1280x720, 30 Hz |
+| `rangefinder` | `sensor_msgs/Range` | Ray cast down, 100 Hz, 40 m, 41 m when nothing is in range |
 | `lidar_points` | `sensor_msgs/PointCloud2` | 28800 points, 10 Hz, NaN where a ray hits nothing |
 
-Rates are in sim time, on `/clock`. Commands must keep streaming: the throttle is cut 0.5 s after the last one. The drone hovers at a throttle of about 0.5. The body frame is `uav1/fcu`, front-left-up, and `uav1/camera` and `uav1/lidar` publish static transforms to it.
+Rates are in sim time, on `/clock`. Commands must keep streaming: the throttle is cut 0.5 s after the last one. The drone hovers at a throttle of about 0.5. The body frame is `uav1/fcu`, front-left-up, and `uav1/camera`, `uav1/lidar`, and `uav1/garmin` publish static transforms to it.
 
 ## Levels
 
@@ -75,7 +76,7 @@ To load another level, pass it to the game in lowercase, as in `--loadlevel=leve
 4. Move the `Multirotor` entity to the spawn point, about 0.155 m above the ground. Do not move the `uav1` entity inside it, because the sensors and the follow camera hang off it.
 5. Press **Ctrl+G** to try it.
 
-With the MRS UAV System, select the level with `export O3DE_LEVEL=mylevel`, and if the drone does not spawn at 0.155 m above the ground, set `rangefinder/ground_z` in `mrs_uav_o3de_api` to minus the spawn height. The odometry starts at the spawn point. The rangefinder assumes a flat floor there, so it is only approximate on real terrain.
+With the MRS UAV System, select the level with `export O3DE_LEVEL=mylevel`.
 
 Avoid `Tools/create_drone_prefab.py` for this: it edits `DemoLevel`, and it overwrites changes made to the drone prefab in the Editor.
 
@@ -92,7 +93,7 @@ To fly in a splat exported from [ModelForge](https://github.com/klaxalk/modelfor
 3. Open a level with `Tools/run_editor.sh`, add a **ModelForge Splat** component to an entity at the origin, and set its **Export folder** to the export.
 4. Set the drone's position just above the ground.
 
-The drone waits for the collision mesh, which can take seconds to load, before it is released. The HW API's rangefinder assumes a flat floor, so it is only approximate on real terrain.
+The drone waits for the collision mesh, which can take seconds to load, before it is released.
 
 ## Repository
 

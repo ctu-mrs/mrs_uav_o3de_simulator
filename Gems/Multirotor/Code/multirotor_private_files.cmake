@@ -10,6 +10,8 @@ set(FILES
     Source/Clients/MultirotorComponent.h
     Source/Clients/RangefinderComponent.cpp
     Source/Clients/RangefinderComponent.h
+    Source/Clients/WorldOdometrySensorComponent.cpp
+    Source/Clients/WorldOdometrySensorComponent.h
     Source/Clients/MultirotorConfiguration.cpp
     Source/Clients/MultirotorConfiguration.h
     Source/Clients/MultirotorController.cpp

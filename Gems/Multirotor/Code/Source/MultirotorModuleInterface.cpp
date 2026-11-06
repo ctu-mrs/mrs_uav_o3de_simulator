@@ -8,6 +8,7 @@
 #include <Clients/MultirotorComponent.h>
 #include <Clients/RangefinderComponent.h>
 #include <Clients/MultirotorSystemComponent.h>
+#include <Clients/WorldOdometrySensorComponent.h>
 
 namespace Multirotor
 {
@@ -27,6 +28,7 @@ namespace Multirotor
             MultirotorComponent::CreateDescriptor(),
             FreeCameraComponent::CreateDescriptor(),
             RangefinderComponent::CreateDescriptor(),
+            WorldOdometrySensorComponent::CreateDescriptor(),
             });
     }
 

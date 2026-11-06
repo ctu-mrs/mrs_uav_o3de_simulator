@@ -59,7 +59,7 @@ Topics are under the drone's namespace, `/uav1`.
 |---|---|---|
 | `cmd/attitude_rate` | `geometry_msgs/TwistStamped` | `twist.angular`: body rate [rad/s], `twist.linear.z`: throttle [0, 1] |
 | `cmd/attitude` | `geometry_msgs/PoseStamped` | `pose.orientation`: attitude, `pose.position.z`: throttle [0, 1] |
-| `odom` | `nav_msgs/Odometry` | 250 Hz, relative to the spawn point, twist in the body frame |
+| `odom` | `nav_msgs/Odometry` | 250 Hz, in the world frame, twist in the body frame |
 | `imu` | `sensor_msgs/Imu` | 250 Hz |
 | `camera_image_color`, `color_camera_info` | `sensor_msgs/Image`, `CameraInfo` | 1280x720, 30 Hz |
 | `rangefinder` | `sensor_msgs/Range` | Ray cast down, 100 Hz, 40 m, 41 m when nothing is in range |

@@ -79,6 +79,7 @@ CAMERA_TYPE = "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent"
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
 RANGEFINDER_TYPE = "{7C1E4D90-2B3A-4F6E-8D15-A94C0B7E6F21} RangefinderComponent"
+ODOMETRY_TYPE = "{72BD2D17-DA24-43AC-B50B-4ED43D455152} WorldOdometrySensorComponent"
 FREE_CAMERA_TYPE = "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92} FreeCameraComponent"
 EDITOR_COMPONENTS = [
     "EditorDisabledCompositionComponent",
@@ -290,7 +291,7 @@ def make_drone_prefab():
                 ros2_frame("fcu", publish=False),
                 wrapped(MULTIROTOR_TYPE, Config={"Rotors": rotors}),
                 wrapped("ROS2ImuSensorComponent", SensorConfiguration=sensor_config),
-                wrapped("ROS2OdometrySensorComponent", SensorConfiguration=sensor_config),
+                wrapped(ODOMETRY_TYPE, SensorConfiguration=sensor_config),
             ],
             children=[visual, camera, follow_camera, lidar_mesh, rangefinder, *props],
         ),

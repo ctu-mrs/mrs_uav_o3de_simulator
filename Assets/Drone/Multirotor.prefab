@@ -851,11 +851,11 @@
                         }
                     }
                 },
-                "ROS2OdometrySensorComponent": {
+                "WorldOdometrySensorComponent": {
                     "$type": "GenericComponentWrapper",
                     "Id": 8327232087777190765,
                     "m_template": {
-                        "$type": "ROS2OdometrySensorComponent",
+                        "$type": "WorldOdometrySensorComponent",
                         "SensorConfiguration": {
                             "Frequency (HZ)": 250.0,
                             "Publishers": {

@@ -51,7 +51,6 @@ ly_add_target(
             AZ::AzCore
             AZ::AzFramework
             Gem::ROS2.Static
-            Gem::ROS2Sensors.API
             Gem::Atom_RPI.Public
 )
 

@@ -4,7 +4,6 @@
 
 #include <Multirotor/MultirotorTypeIds.h>
 
-#include <Clients/CameraResponseComponent.h>
 #include <Clients/FreeCameraComponent.h>
 #include <Clients/MultirotorComponent.h>
 #include <Clients/RangefinderComponent.h>
@@ -28,7 +27,6 @@ namespace Multirotor
             MultirotorComponent::CreateDescriptor(),
             FreeCameraComponent::CreateDescriptor(),
             RangefinderComponent::CreateDescriptor(),
-            CameraResponseComponent::CreateDescriptor(),
             });
     }
 

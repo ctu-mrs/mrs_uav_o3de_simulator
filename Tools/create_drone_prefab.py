@@ -79,7 +79,6 @@ CAMERA_TYPE = "{CA11DA46-29FF-4083-B5F6-E02C3A8C3A3D} EditorCameraComponent"
 TRANSFORM_TYPE = "{27F1E1A1-8D9D-4C3B-BD3A-AFB9762449C0} TransformComponent"
 MULTIROTOR_TYPE = "{E4B7C2A9-5D16-4F38-9A0B-7C3E1D2F4A51} MultirotorComponent"
 RANGEFINDER_TYPE = "{7C1E4D90-2B3A-4F6E-8D15-A94C0B7E6F21} RangefinderComponent"
-CAMERA_RESPONSE_TYPE = "{5A3E9C17-6B2D-4E84-9F01-D27C8B4A1E63} CameraResponseComponent"
 FREE_CAMERA_TYPE = "{2F6D8A14-93C7-4E1B-B5A2-6C0E7D1F3B92} FreeCameraComponent"
 EDITOR_COMPONENTS = [
     "EditorDisabledCompositionComponent",
@@ -315,7 +314,7 @@ def make_drone_prefab():
             camera,
             "camera",
             drone,
-            [ros2_frame("camera"), camera_sensor(), wrapped(CAMERA_RESPONSE_TYPE)],
+            [ros2_frame("camera"), camera_sensor()],
             position=CAMERA_POSITION,
             rotation=CAMERA_ROTATION,
         ),

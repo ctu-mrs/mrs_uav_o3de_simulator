@@ -2,24 +2,105 @@
 
 A multirotor simulator in [O3DE](https://o3de.org) with a ROS 2 interface. An x500 quadrotor flies with a forward RGB camera and a Livox Mid-360-style lidar, in a warehouse or in a Gaussian splat world.
 
-The dynamics and the attitude and rate controllers run inside O3DE at 500 Hz. ROS 2 carries attitude or attitude-rate commands in and sensor data out, using standard messages only. To fly it with the [MRS UAV System](https://github.com/ctu-mrs/mrs_uav_system), use [mrs_uav_o3de_api](https://github.com/klaxalk/mrs_uav_o3de_api).
+The dynamics and the attitude and rate controllers run inside O3DE at 500 Hz. ROS 2 carries attitude or attitude-rate commands in and sensor data out, using standard messages only. To fly it with the [MRS UAV System](https://github.com/ctu-mrs/mrs_uav_system), use [mrs_uav_o3de_api](https://github.com/ctu-mrs/mrs_uav_o3de_api), as described under [Flying with the MRS UAV System](#flying-with-the-mrs-uav-system).
 
-## Requirements
+## Installation on Ubuntu 24.04
 
-- O3DE 26.05 SDK, registered in `~/.o3de/o3de_manifest.json`, on Linux
-- ROS 2 Jazzy, with `control_msgs` and `ackermann_msgs`, which the `ROS2` Gem requires
-- Clang
-- These Gems, registered with `o3de.sh register --gem-path`: `ROS2` 4.3.0, `ROS2Sensors`, `LevelGeoreferencing`, and `WarehouseAssets`
+### 1. ROS 2 Jazzy
 
-## Build
-
-ROS 2 must be sourced:
+Install ROS 2 Jazzy as described in the [ROS 2 documentation](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html), then the message packages that the `ROS2` Gem needs:
 
 ```sh
-source /opt/ros/jazzy/setup.zsh
+sudo apt install ros-jazzy-desktop ros-jazzy-control-msgs ros-jazzy-ackermann-msgs ros-jazzy-vision-msgs ros-jazzy-rmw-zenoh-cpp
+```
+
+### 2. O3DE 26.05
+
+Download the Linux `.deb` package of O3DE 26.05 from [o3de.org/download](https://o3de.org/download/) and install it. It goes to `/opt/O3DE/26.05` and pulls in Clang, Ninja, and the other build dependencies:
+
+```sh
+sudo apt install ./o3de_26.05_amd64.deb   # the file you downloaded
+sudo apt install cmake git
+/opt/O3DE/26.05/scripts/o3de.sh register --this-engine
+```
+
+The last command registers the engine in `~/.o3de/o3de_manifest.json`, and the first run of `o3de.sh` also downloads O3DE's own Python, which takes a few minutes.
+
+### 3. The external Gems
+
+The project needs `ROS2` 4.3.0, `ROS2Sensors` 1.1.0, `LevelGeoreferencing` 1.0.0, and `WarehouseAssets` 2.0.4 from [o3de-extras](https://github.com/o3de/o3de-extras). Download and register them:
+
+```sh
+O3DE=/opt/O3DE/26.05/scripts/o3de.sh
+URL=https://github.com/o3de/o3de-extras/releases/download/2.0
+for gem in ROS2:ros2:4.3.0 ROS2Sensors:ros2sensors:1.1.0 LevelGeoreferencing:levelgeoreferencing:1.0.0 WarehouseAssets:warehouseassets:2.0.4; do
+  IFS=: read -r name file version <<< "$gem"
+  dir=~/O3DE/Gems/$name/$version
+  mkdir -p "$dir"
+  curl -L "$URL/$file-$version-gem.zip" -o /tmp/$file.zip && unzip -oq /tmp/$file.zip -d "$dir"
+  $O3DE register --gem-path "$dir"
+done
+```
+
+The Project Manager's **Gem Catalog** can download the same Gems instead.
+
+### 4. This project
+
+Clone it, register it, and build it. ROS 2 must be sourced for every configure and build:
+
+```sh
+git clone https://github.com/ctu-mrs/mrs_uav_o3de_simulator.git ~/git/o3de_drone_sim
+cd ~/git/o3de_drone_sim
+/opt/O3DE/26.05/scripts/o3de.sh register --project-path .
+
+source /opt/ros/jazzy/setup.bash
 CC=clang CXX=clang++ cmake -B build/linux -S . -G "Ninja Multi-Config"
 cmake --build build/linux --config profile --target Editor DroneSim.GameLauncher -j 8
 ```
+
+The first build takes a long time. Keep `-j` at about one job per 2 GB of RAM, or the compiler runs out of memory. Keep the project in `~/git/o3de_drone_sim`, where the MRS UAV System session looks for it, or set `O3DE_PROJECT` to its path.
+
+## First test in the Editor
+
+1. Start the Editor with `Tools/run_editor.sh`, never directly, as explained under [Run](#run).
+2. On the first start, the Asset Processor compiles all assets, which takes a long time. Its icon in the system tray shows the progress. Wait until it is done.
+3. Open a level with **File > Open Level**: `FlatWorld` first, because it is small and loads fast, then `DemoLevel`, the warehouse.
+4. Press **Ctrl+G** to play. The drone sits on the ground, and the game view follows it. Press **Esc** to stop.
+5. While it plays, check the ROS 2 interface from another terminal:
+   ```sh
+   source /opt/ros/jazzy/setup.bash
+   ros2 topic list                 # /clock and the /uav1 topics
+   ros2 topic hz /uav1/odom        # about 250 Hz in sim time
+   ```
+   To see it fly without a controller, command a zero body rate with a throttle above hover. It climbs, then drifts, because nothing holds its position. Stop it with Ctrl+C; the throttle is cut 0.5 s later:
+   ```sh
+   ros2 topic pub -r 50 /uav1/cmd/attitude_rate geometry_msgs/msg/TwistStamped "{twist: {linear: {z: 0.6}}}"
+   ```
+
+Without the Editor, `Tools/run_game.sh flatworld` and `Tools/run_game.sh` (the warehouse) run the same levels in the game launcher, after the Asset Processor has compiled them once.
+
+## Flying with the MRS UAV System
+
+The [MRS UAV System](https://github.com/ctu-mrs/mrs_uav_system) flies the drone through the HW API plugin [mrs_uav_o3de_api](https://github.com/ctu-mrs/mrs_uav_o3de_api), which also has an example tmux session that starts the simulator, the MRS UAV System, and RViz.
+
+1. Install the MRS UAV System for ROS 2 Jazzy, as described in its README, and `tmuxinator`.
+2. Build the plugin in a workspace:
+   ```sh
+   mkdir -p ~/ws_o3de/src && cd ~/ws_o3de/src
+   git clone https://github.com/ctu-mrs/mrs_uav_o3de_api.git
+   cd ~/ws_o3de
+   source /opt/ros/jazzy/setup.bash
+   colcon build
+   ```
+3. Start the session:
+   ```sh
+   source ~/ws_o3de/install/setup.bash
+   cd ~/ws_o3de/src/mrs_uav_o3de_api/tmux/one_drone
+   ./start.sh
+   ```
+   The drone takes off by itself once the MRS UAV System is ready. It loads `DemoLevel` unless `O3DE_LEVEL` names another level, in lowercase, for example `export O3DE_LEVEL=flatworld` before `./start.sh`. `./start_headless.sh` runs without rendering, so without the camera, and faster than real time. The plugin's README describes the session's flags and its limitations.
+
+The game launcher in the session does not connect to the Asset Processor, so compile the assets first, with the Editor or `AssetProcessorBatch`, and again after every change to a level or the drone.
 
 ## Run
 
@@ -89,18 +170,20 @@ Avoid `Tools/create_drone_prefab.py` for this: it edits `DemoLevel`, and it over
 
 ### Gaussian splat worlds (optional)
 
-To fly in a splat exported from [ModelForge](https://github.com/klaxalk/modelforge), add its `ModelForgeSplat` Gem, which is not part of this project:
+To fly in a Gaussian splat exported from ModelForge, you need its `ModelForgeSplat` Gem, version 0.12.0 or later, which is not part of this project and is not public:
 
-1. Download the Gem, then register and enable it:
+1. Unpack the Gem anywhere, then register and enable it:
    ```sh
-   <engine>/scripts/o3de.sh register --gem-path /path/to/ModelForgeSplat
-   <engine>/scripts/o3de.sh enable-gem -gn ModelForgeSplat -pp /path/to/o3de_drone_sim
+   /opt/O3DE/26.05/scripts/o3de.sh register --gem-path /path/to/ModelForgeSplat
+   /opt/O3DE/26.05/scripts/o3de.sh enable-gem -gn ModelForgeSplat -pp ~/git/o3de_drone_sim
    ```
+   This adds the Gem to `project.json`. Do not commit that change, because the project does not build without the Gem; `git update-index --skip-worktree project.json` keeps it out of `git status`.
 2. Build again, as above.
-3. Open a level with `Tools/run_editor.sh`, add a **ModelForge Splat** component to an entity at the origin, and set its **Export folder** to the export.
-4. Set the drone's position just above the ground.
+3. Open a level with `Tools/run_editor.sh`, create an entity at the origin, and add a **ModelForge Splat** component to it.
+4. In the component, click the browse button next to **Export folder** and select the ModelForge export: the folder that holds `splat.json`.
+5. Move the drone's `Multirotor` entity just above the ground of the splat.
 
-The drone waits for the collision mesh, which can take seconds to load, before it is released.
+The drone waits for the splat's collision mesh, which can take seconds to load, before it is released. `Tools/bake_sky.py` bakes a sky without a horizon, so that nothing from a photo shows around the splat's edge.
 
 ## Repository
 

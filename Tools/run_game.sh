@@ -5,6 +5,8 @@
 #   Tools/run_game.sh --list
 #
 # The level defaults to demolevel. --headless runs without rendering, so without the camera.
+# --drone_external_odometry=<topic> starts the render-only mode (see the README): the other simulator then owns /clock,
+# so this script drops the fixed simulation step and makes the ROS 2 Gem consume /clock instead of publishing it.
 
 ROS_SETUP=/opt/ros/jazzy/setup.bash
 PROJECT_ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
@@ -27,11 +29,16 @@ if [ -n "$1" ] && [[ "$1" != -* ]]; then
 fi
 
 flags=(--r_renderScale=0.5)
+time_flags=(--t_simulationTickDeltaOverride=17000)
 args=()
 for arg in "$@"; do
   if [ "$arg" = "--headless" ]; then
     flags=(--rhi=null)
   else
+    if [[ "$arg" == --drone_external_odometry=* ]]; then
+      time_flags=(--regset=/O3DE/ROS2/ClockType=ros2 --regset=/O3DE/ROS2/PublishClock=false
+                  "--regset=/O3DE/ROS2/NodeArguments=--ros-args -p use_sim_time:=true")
+    fi
     args+=("$arg")
   fi
 done
@@ -53,5 +60,5 @@ export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
 
 cd "$LAUNCHER_DIR"
 exec ./DroneSim.GameLauncher --project-path="$PROJECT_ROOT" --bg_ConnectToAssetProcessor=0 \
-  --t_simulationTickDeltaOverride=17000 "${flags[@]}" \
+  "${time_flags[@]}" "${flags[@]}" \
   --loadlevel="levels/$level/$level.spawnable" "${args[@]}"

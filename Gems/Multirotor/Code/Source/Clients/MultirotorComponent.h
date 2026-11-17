@@ -13,6 +13,7 @@
 #include <Multirotor/MultirotorTypeIds.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
 
@@ -28,6 +29,13 @@ namespace Multirotor
     //! and runs the onboard controller and motor model on every physics sub-step, applying rotor forces to the body.
     //! Publishes whether the UAV stands on something, from the contacts of its rigid body.
     //! Sensors (IMU, odometry, cameras, ...) are separate ROS 2 sensor components on the same entity or its children.
+    //!
+    //! Render-only mode, --drone_external_odometry=<nav_msgs/Odometry topic>: another simulator owns the dynamics, as the
+    //! MRS multirotor simulator does for mrs_o3de_demo. The body stays kinematic and follows the newest pose, raised by
+    //! --drone_external_body_height (default 0.155 m: that simulator's pose is on the ground, this body's origin above it).
+    //! No commands are subscribed, the controller does not run, and on_ground is not published. Sensors keep running.
+    //! The pose freezes when the topic stops for 0.5 s. Run with the ROS 2 Gem consuming /clock instead of publishing it:
+    //! --regset=/O3DE/ROS2/ClockType=ros2 --regset=/O3DE/ROS2/PublishClock=false.
     class MultirotorComponent
         : public AZ::Component
         , private AZ::TickBus::Handler
@@ -54,6 +62,7 @@ namespace Multirotor
         void OnCollision(const AzPhysics::CollisionEvent& event);
         bool IsGroundContact(const AzPhysics::CollisionEvent& event) const;
         void PublishOnGround(float fixedDeltaTime);
+        void FollowExternalOdometry();
 
         MultirotorConfiguration m_config;
         MultirotorController m_controller;
@@ -81,5 +90,15 @@ namespace Multirotor
         MultirotorController::Command m_command; //!< Guarded by m_commandMutex.
         double m_commandTime = 0.0; //!< Sim time the command arrived. Guarded by m_commandMutex.
         double m_simTime = 0.0; //!< Accumulated physics time since activation [s].
+
+        // Render-only mode (--drone_external_odometry).
+        AZStd::string m_externalOdometryTopic; //!< Empty: this component simulates the dynamics.
+        float m_externalBodyHeight = 0.155f; //!< [m], along the body Z axis.
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_externalOdometrySubscription;
+        AZStd::mutex m_externalMutex;
+        AZ::Transform m_externalPose = AZ::Transform::CreateIdentity(); //!< Guarded by m_externalMutex.
+        AZ::u64 m_externalGeneration = 0; //!< Guarded by m_externalMutex.
+        double m_externalReceived = 0.0; //!< Steady clock [s]. Guarded by m_externalMutex.
+        AZ::u64 m_appliedGeneration = 0;
     };
 } // namespace Multirotor

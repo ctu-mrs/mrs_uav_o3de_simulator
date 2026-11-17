@@ -1,6 +1,12 @@
 #include "MultirotorComponent.h"
 
+#include <chrono>
+#include <cmath>
+
+#include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/TransformBus.h>
+#include <AzCore/Settings/CommandLine.h>
+#include <AzCore/std/string/conversions.h>
 #include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
@@ -23,6 +29,14 @@ namespace Multirotor
 
         //! The UAV is released this far above the ground [m], so that uneven ground does not end up inside its colliders.
         constexpr float ReleaseClearance = 0.05f;
+
+        //! Render-only mode freezes the pose when the external odometry is older than this [s, wall time].
+        constexpr double ExternalOdometryTimeout = 0.5;
+
+        double SteadySeconds()
+        {
+            return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        }
 
         auto ShapePair(const AzPhysics::CollisionEvent& event)
         {
@@ -83,6 +97,41 @@ namespace Multirotor
         };
 
         auto node = ROS2::ROS2Interface::Get()->GetNode();
+
+        const AZ::CommandLine* commandLine = nullptr;
+        AZ::ComponentApplicationBus::BroadcastResult(commandLine, &AZ::ComponentApplicationRequests::GetAzCommandLine);
+        m_externalOdometryTopic.clear();
+        m_externalGeneration = m_appliedGeneration = 0;
+        if (commandLine && commandLine->GetNumSwitchValues("drone_external_odometry") > 0)
+        {
+            m_externalOdometryTopic = commandLine->GetSwitchValue("drone_external_odometry", 0);
+            if (commandLine->GetNumSwitchValues("drone_external_body_height") > 0)
+            {
+                m_externalBodyHeight = AZStd::stof(commandLine->GetSwitchValue("drone_external_body_height", 0));
+            }
+            AZ_Printf("Multirotor", "render-only mode: following %s\n", m_externalOdometryTopic.c_str());
+            m_externalOdometrySubscription = node->create_subscription<nav_msgs::msg::Odometry>(
+                m_externalOdometryTopic.c_str(),
+                rclcpp::SensorDataQoS().keep_last(1),
+                [this](const nav_msgs::msg::Odometry& msg)
+                {
+                    const auto& p = msg.pose.pose.position;
+                    const AZ::Quaternion q = ROS2::ROS2Conversions::FromROS2Quaternion(msg.pose.pose.orientation);
+                    if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z) || q.GetLength() < 1e-6f)
+                    {
+                        return;
+                    }
+                    const AZ::Transform pose = AZ::Transform::CreateFromQuaternionAndTranslation(
+                        q.GetNormalized(), AZ::Vector3(aznumeric_cast<float>(p.x), aznumeric_cast<float>(p.y), aznumeric_cast<float>(p.z)));
+                    AZStd::lock_guard<AZStd::mutex> lock(m_externalMutex);
+                    m_externalPose = pose * AZ::Transform::CreateTranslation(AZ::Vector3(0.0f, 0.0f, m_externalBodyHeight));
+                    m_externalReceived = SteadySeconds();
+                    ++m_externalGeneration;
+                });
+            AZ::TickBus::Handler::BusConnect();
+            return;
+        }
+
         m_attitudeSubscription = node->create_subscription<geometry_msgs::msg::PoseStamped>(
             namespaced(m_config.m_attitudeCmdTopic.m_topic).c_str(),
             m_config.m_attitudeCmdTopic.GetQoS(),
@@ -120,6 +169,7 @@ namespace Multirotor
         m_collisionPersistHandler.Disconnect();
         m_collisionEndHandler.Disconnect();
         m_groundContacts.clear();
+        m_externalOdometrySubscription.reset();
         m_attitudeSubscription.reset();
         m_attitudeRateSubscription.reset();
         m_onGroundPublisher.reset();
@@ -137,6 +187,11 @@ namespace Multirotor
 
         if (m_bodyHandle != AzPhysics::InvalidSimulatedBodyHandle)
         {
+            if (!m_externalOdometryTopic.empty())
+            {
+                FollowExternalOdometry();
+                return;
+            }
             SpinRotorVisuals(deltaTime);
             return;
         }
@@ -172,6 +227,12 @@ namespace Multirotor
         m_rotorAngles.assign(m_config.m_rotors.size(), 0.0f);
         m_bodyHandle = rigidBody->m_bodyHandle;
         m_sceneHandle = sceneHandle;
+
+        if (!m_externalOdometryTopic.empty())
+        {
+            rigidBody->SetKinematic(true); // for good: the external simulator moves it
+            return;
+        }
 
         if (m_config.m_groundWaitTimeout > 0.0f)
         {
@@ -298,6 +359,22 @@ namespace Multirotor
         std_msgs::msg::Bool message;
         message.data = !m_groundContacts.empty();
         m_onGroundPublisher->publish(message);
+    }
+
+    void MultirotorComponent::FollowExternalOdometry()
+    {
+        AZ::Transform pose;
+        {
+            AZStd::lock_guard<AZStd::mutex> lock(m_externalMutex);
+            if (m_externalGeneration == m_appliedGeneration || SteadySeconds() - m_externalReceived > ExternalOdometryTimeout)
+            {
+                return; // Freeze on missing or stale input; never extrapolate.
+            }
+            pose = m_externalPose;
+            m_appliedGeneration = m_externalGeneration;
+        }
+        // The kinematic body follows the entity transform; sensors and the follow camera hang off this entity.
+        AZ::TransformBus::Event(GetEntityId(), &AZ::TransformInterface::SetWorldTM, pose);
     }
 
     void MultirotorComponent::SpinRotorVisuals(float deltaTime)

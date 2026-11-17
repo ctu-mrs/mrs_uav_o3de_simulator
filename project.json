@@ -38,6 +38,7 @@
         "Multirotor",
         "PhysX5",
         "PrefabBuilder",
+        "Profiler",
         "PrimitiveAssets",
         "ROS2>=3.1.0",
         "ROS2Sensors",

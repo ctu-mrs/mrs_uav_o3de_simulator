@@ -2,7 +2,9 @@
 
 #include <Atom/RPI.Public/RenderPipeline.h>
 #include <Atom/RPI.Public/Scene.h>
+#include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/TransformBus.h>
+#include <AzCore/Settings/CommandLine.h>
 #include <AzCore/Console/IConsole.h>
 #include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/EditContext.h>
@@ -13,6 +15,8 @@
 #include <AzFramework/Input/Channels/InputChannel.h>
 #include <AzFramework/Input/Devices/Keyboard/InputDeviceKeyboard.h>
 #include <AzFramework/Input/Devices/Mouse/InputDeviceMouse.h>
+
+#include <cstdio>
 
 AZ_CVAR(bool, drone_viewport, true, nullptr, AZ::ConsoleFunctorFlags::Null, "Whether the game view renders at startup");
 
@@ -78,6 +82,32 @@ namespace Multirotor
     {
         m_viewportEnabled = drone_viewport;
         m_viewportApplied = true;
+
+        // --drone_fixed_view="x y z look_x look_y look_z vertical_fov_deg", in the world [m, deg], holds the view still for
+        // benchmarks. A command-line switch, as the SDK's AzCore does not export the type info of string console variables.
+        AZStd::string fixedView;
+        const AZ::CommandLine* commandLine = nullptr;
+        AZ::ComponentApplicationBus::BroadcastResult(commandLine, &AZ::ComponentApplicationRequests::GetAzCommandLine);
+        if (commandLine && commandLine->GetNumSwitchValues("drone_fixed_view") > 0)
+        {
+            fixedView = commandLine->GetSwitchValue("drone_fixed_view", 0);
+        }
+        float values[7] = {};
+        m_fixedView = !fixedView.empty() &&
+            sscanf(fixedView.c_str(), "%f %f %f %f %f %f %f", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5],
+                   &values[6]) == 7;
+        if (m_fixedView)
+        {
+            m_fixedTransform = AZ::Transform::CreateLookAt(
+                AZ::Vector3(values[0], values[1], values[2]), AZ::Vector3(values[3], values[4], values[5]), AZ::Transform::Axis::YPositive);
+            m_fixedFov = values[6];
+            m_showGuide = false;
+        }
+        else if (!fixedView.empty())
+        {
+            AZ_Warning("FreeCamera", false, "drone_fixed_view needs 7 numbers, got \"%s\"; ignored", fixedView.c_str());
+        }
+
         AZ::TickBus::Handler::BusConnect();
         AzFramework::InputChannelEventListener::Connect();
     }
@@ -151,6 +181,11 @@ namespace Multirotor
     bool FreeCameraComponent::OnInputChannelEventFiltered(const AzFramework::InputChannel& inputChannel)
     {
         const AzFramework::InputChannelId& channel = inputChannel.GetInputChannelId();
+
+        if (m_fixedView)
+        {
+            return false; // the view does not move
+        }
 
         if (channel == Key::AlphanumericC && inputChannel.IsStateBegan())
         {
@@ -251,6 +286,20 @@ namespace Multirotor
     {
         ApplyViewport();
         DrawGuide();
+
+        if (m_fixedView)
+        {
+            // Every tick, as the follow camera can take the view when it activates after this one.
+            AZ::EntityId activeCamera;
+            Camera::CameraSystemRequestBus::BroadcastResult(activeCamera, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
+            if (activeCamera != GetEntityId())
+            {
+                Camera::CameraRequestBus::Event(GetEntityId(), &Camera::CameraRequestBus::Events::MakeActiveView);
+                Camera::CameraRequestBus::Event(GetEntityId(), &Camera::CameraRequestBus::Events::SetFovDegrees, m_fixedFov);
+            }
+            AZ::TransformBus::Event(GetEntityId(), &AZ::TransformInterface::SetWorldTM, m_fixedTransform);
+            return;
+        }
 
         if (!m_active)
         {

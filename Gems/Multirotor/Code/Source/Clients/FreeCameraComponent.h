@@ -3,6 +3,7 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityId.h>
 #include <AzCore/Component/TickBus.h>
+#include <AzCore/Math/Transform.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzFramework/Input/Events/InputChannelEventListener.h>
 #include <Multirotor/MultirotorTypeIds.h>
@@ -14,6 +15,7 @@ namespace Multirotor
     //! the right mouse button looks around, and left shift moves faster. T keeps the view aimed at the drone
     //! while it still moves, H toggles the guide drawn in the game view, and V stops rendering the game view, which
     //! leaves sensor cameras running in their own render pipelines. The drone_viewport console variable sets the start.
+    //! The --drone_fixed_view command-line switch holds this camera at a fixed pose instead and ignores the keys, for benchmarks.
     class FreeCameraComponent
         : public AZ::Component
         , private AZ::TickBus::Handler
@@ -57,6 +59,9 @@ namespace Multirotor
         bool m_fast = false;
         AZ::Vector3 m_moveInput = AZ::Vector3::CreateZero(); //!< Right, forward, up, each in [-1, 1].
         bool m_keys[6] = {}; //!< Held movement keys, in the order of the key table in the source file.
+        bool m_fixedView = false; //!< drone_fixed_view holds the view at m_fixedTransform.
+        AZ::Transform m_fixedTransform = AZ::Transform::CreateIdentity();
+        float m_fixedFov = 60.0f; //!< Vertical [deg].
         AZ::Vector3 m_position = AZ::Vector3::CreateZero(); //!< In the world [m].
         float m_yaw = 0.0f; //!< [rad]
         float m_pitch = 0.0f; //!< [rad]

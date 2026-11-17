@@ -153,6 +153,129 @@ namespace UnitTest
         MultirotorController controller;
         EXPECT_FALSE(controller.Configure(config, AZ::Vector3::CreateOne()));
     }
+
+    //! Closed-loop step responses of the controller on the x500's rotational dynamics, stepped as PhysX steps the rigid
+    //! body: the controller runs once per physics step, and the rotor thrusts act as impulses over that step. Compares
+    //! the PhysX step the project uses (2 ms) with a coarser one (4 ms), which halves the physics cost per rendered frame.
+    //! In this model the responses stay within the limits up to a 64 ms step (checked 2026-11-17), so it guards the
+    //! response shape, not the margin: sensor delay, contacts, and the MRS outer loops are not modelled; fly to check those.
+    class MultirotorClosedLoopTest : public ::testing::TestWithParam<float>
+    {
+    protected:
+        struct Response
+        {
+            float m_overshoot = 0.0f; //!< Peak beyond the target, relative to the step.
+            float m_settlingTime = 0.0f; //!< Last time the error exceeded 5% of the step [s].
+            float m_finalError = 0.0f; //!< Relative to the step, at the end.
+        };
+
+        void SetUp() override
+        {
+            // x500 as in Assets/Drone/Multirotor.prefab and Tools/create_drone_prefab.py.
+            constexpr float d = 0.1812f;
+            constexpr float h = 0.057f;
+            m_config.m_rotors = {
+                { AZ::Vector3(d, -d, h), false },
+                { AZ::Vector3(-d, d, h), false },
+                { AZ::Vector3(d, d, h), true },
+                { AZ::Vector3(-d, -d, h), true },
+            };
+            ASSERT_TRUE(m_controller.Configure(m_config, m_inertia));
+        }
+
+        //! Advances the body by one physics step of dt with the controller's current rotor thrusts.
+        void StepBody(const MultirotorController& controller, MultirotorController::State& state, float dt) const
+        {
+            AZ::Vector3 torque(0.0f, 0.0f, controller.GetYawReactionTorque());
+            const auto& thrusts = controller.GetRotorThrusts();
+            for (size_t i = 0; i < thrusts.size(); ++i)
+            {
+                torque += m_config.m_rotors[i].m_position.Cross(AZ::Vector3(0.0f, 0.0f, thrusts[i]));
+            }
+            state.m_bodyRate += torque / m_inertia * dt;
+            const AZ::Vector3 w = state.m_bodyRate;
+            const AZ::Quaternion spin(w.GetX(), w.GetY(), w.GetZ(), 0.0f);
+            state.m_orientation = (state.m_orientation + state.m_orientation * spin * (0.5f * dt)).GetNormalized();
+        }
+
+        //! value(state) is the controlled quantity; target its commanded value.
+        template<typename Value>
+        Response Simulate(const MultirotorController::Command& command, float target, Value value, float dt) const
+        {
+            MultirotorController controller = m_controller;
+            MultirotorController::State state;
+            Response response;
+            float peak = 0.0f;
+            const int steps = static_cast<int>(3.0f / dt);
+            for (int i = 0; i < steps; ++i)
+            {
+                controller.Step(command, state, dt);
+                StepBody(controller, state, dt);
+                const float v = value(state);
+                peak = AZ::GetMax(peak, v);
+                if (AZ::GetAbs(v - target) > 0.05f * AZ::GetAbs(target))
+                {
+                    response.m_settlingTime = (i + 1) * dt;
+                }
+                response.m_finalError = AZ::GetAbs(v - target) / AZ::GetAbs(target);
+            }
+            response.m_overshoot = AZ::GetMax(0.0f, peak - target) / AZ::GetAbs(target);
+            return response;
+        }
+
+        Response RollRateStep(float dt) const
+        {
+            MultirotorController::Command command;
+            command.m_mode = MultirotorController::Mode::AttitudeRate;
+            command.m_throttle = 0.5f;
+            command.m_bodyRate = AZ::Vector3(1.0f, 0.0f, 0.0f);
+            return Simulate(command, 1.0f, [](const MultirotorController::State& s) { return s.m_bodyRate.GetX(); }, dt);
+        }
+
+        Response RollAttitudeStep(float dt) const
+        {
+            MultirotorController::Command command;
+            command.m_mode = MultirotorController::Mode::Attitude;
+            command.m_throttle = 0.5f;
+            command.m_attitude = AZ::Quaternion::CreateRotationX(0.2f);
+            return Simulate(
+                command, 0.2f,
+                [](const MultirotorController::State& s)
+                {
+                    const AZ::Quaternion q = s.m_orientation;
+                    return 2.0f * AZStd::atan2(q.GetX(), q.GetW()); // roll, as the step is about X only
+                },
+                dt);
+        }
+
+        MultirotorConfiguration m_config;
+        MultirotorController m_controller;
+        AZ::Vector3 m_inertia = AZ::Vector3(0.03167f, 0.03167f, 0.0625f);
+    };
+
+    TEST_P(MultirotorClosedLoopTest, RollRateAndAttitudeStepsMatchThe2msReference)
+    {
+        const float dt = GetParam();
+        const Response referenceRate = RollRateStep(0.002f);
+        const Response referenceAttitude = RollAttitudeStep(0.002f);
+        const Response rate = RollRateStep(dt);
+        const Response attitude = RollAttitudeStep(dt);
+        printf("dt %.3f s: rate step overshoot %.3f settling %.3f s final %.4f (2 ms: %.3f, %.3f s); "
+               "attitude step overshoot %.3f settling %.3f s final %.4f (2 ms: %.3f, %.3f s)\n",
+               dt, rate.m_overshoot, rate.m_settlingTime, rate.m_finalError, referenceRate.m_overshoot,
+               referenceRate.m_settlingTime, attitude.m_overshoot, attitude.m_settlingTime, attitude.m_finalError,
+               referenceAttitude.m_overshoot, referenceAttitude.m_settlingTime);
+
+        // Converges, and within 0.05 overshoot and 20% settling time of the 2 ms reference.
+        EXPECT_LT(rate.m_finalError, 0.02f);
+        EXPECT_LT(attitude.m_finalError, 0.02f);
+        EXPECT_LT(rate.m_overshoot, referenceRate.m_overshoot + 0.05f);
+        EXPECT_LT(attitude.m_overshoot, referenceAttitude.m_overshoot + 0.05f);
+        EXPECT_LT(rate.m_settlingTime, 1.2f * referenceRate.m_settlingTime + 0.01f);
+        EXPECT_LT(attitude.m_settlingTime, 1.2f * referenceAttitude.m_settlingTime + 0.01f);
+    }
+
+    INSTANTIATE_TEST_SUITE_P(PhysicsSteps, MultirotorClosedLoopTest, ::testing::Values(0.002f, 0.004f));
 } // namespace UnitTest
 
 AZ_UNIT_TEST_HOOK(DEFAULT_UNIT_TEST_ENV);

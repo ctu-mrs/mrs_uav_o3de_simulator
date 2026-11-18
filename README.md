@@ -185,6 +185,26 @@ To fly in a Gaussian splat exported from ModelForge, you need its `ModelForgeSpl
 
 The drone waits for the splat's collision mesh, which can take seconds to load, before it is released. `Tools/bake_sky.py` bakes a sky without a horizon, so that nothing from a photo shows around the splat's edge.
 
+### Benchmark switches
+
+Three launcher switches are for benchmarks:
+
+- `--drone_fixed_view="x y z look_x look_y look_z fov"` holds the game view at a pose in the level, in metres, with the vertical FOV in degrees, and ignores the camera keys.
+- `--drone_frame_log=/path/frames.csv` writes the wall-clock interval of every frame, as `unix_s,frame_ms`, independent of `--t_simulationTickDeltaOverride`.
+- `--drone_profile_directory=/path` saves CPU profiler captures of five single frames, one per second, starting 60 s after start (`--drone_profile_after`, `--drone_profile_count` change that). The project enables the `Profiler` Gem for this.
+
+### Render-only mode
+
+With `--drone_external_odometry=<topic>`, the simulator only renders: another simulator owns the dynamics, such as the MRS UAV System's `mrs_multirotor_simulator`. The drone's body stays kinematic and follows the newest `nav_msgs/Odometry` on that topic, raised by `--drone_external_body_height` (0.155 m by default, because the MRS simulator's pose is on the ground while this body's origin is above it). No commands are subscribed, the controller does not run, and `on_ground` is not published; the cameras, lidar, IMU and odometry sensors keep running. The pose freezes if the topic stops for 0.5 s.
+
+The other simulator then also owns `/clock`, so the ROS 2 Gem must consume it instead of publishing its own. `Tools/run_game.sh` does that when it sees the switch, and leaves out `--t_simulationTickDeltaOverride`, because simulated time comes from the other simulator:
+
+```sh
+Tools/run_game.sh flatworld --drone_external_odometry=/multirotor_simulator/uav1/odom
+```
+
+Started otherwise, pass `--regset=/O3DE/ROS2/ClockType=ros2 --regset=/O3DE/ROS2/PublishClock=false "--regset=/O3DE/ROS2/NodeArguments=--ros-args -p use_sim_time:=true"` and no tick override.
+
 ## Repository
 
 - `Gems/Multirotor`: the dynamics, controllers, and ROS interface.
